@@ -19,6 +19,7 @@ import { TextInput } from '../components/common/TextInput';
 import { PasswordInput } from '../components/common/PasswordInput';
 import { PrimaryButton } from '../components/common/PrimaryButton';
 import { InlineFeedback } from '../components/common/InlineFeedback';
+import { createLoginSchema } from '../validation/authSchemas';
 
 interface LoginScreenProps {
   onNavigateToRegister: () => void;
@@ -40,32 +41,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const validate = () => {
-    let isValid = true;
     setEmailError(null);
     setPasswordError(null);
     setGeneralError(null);
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setEmailError(t('emailRequired'));
-      isValid = false;
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmedEmail)) {
-        setEmailError(t('emailInvalid'));
-        isValid = false;
-      }
+    const schema = createLoginSchema(t);
+    const result = schema.safeParse({ email, password });
+
+    if (!result.success) {
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0];
+        if (field === 'email' && !emailError) {
+          setEmailError(issue.message);
+        } else if (field === 'password' && !passwordError) {
+          setPasswordError(issue.message);
+        }
+      });
+      return false;
     }
 
-    if (!password) {
-      setPasswordError(t('passwordRequired'));
-      isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError(t('passwordMinLength'));
-      isValid = false;
-    }
-
-    return isValid;
+    return true;
   };
 
   const handleLogin = () => {

@@ -19,6 +19,7 @@ import { TextInput } from '../components/common/TextInput';
 import { PasswordInput } from '../components/common/PasswordInput';
 import { PrimaryButton } from '../components/common/PrimaryButton';
 import { InlineFeedback } from '../components/common/InlineFeedback';
+import { createRegisterSchema } from '../validation/authSchemas';
 
 interface RegisterScreenProps {
   onNavigateToLogin: () => void;
@@ -48,52 +49,40 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const validate = () => {
-    let isValid = true;
     setFullNameError(null);
     setEmailError(null);
     setPasswordError(null);
     setConfirmPasswordError(null);
     setConsentError(null);
 
-    if (!fullName.trim()) {
-      setFullNameError(t('fullNameRequired'));
-      isValid = false;
+    const schema = createRegisterSchema(t);
+    const result = schema.safeParse({
+      fullName,
+      email,
+      password,
+      confirmPassword,
+      agreedToTerms,
+    });
+
+    if (!result.success) {
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0];
+        if (field === 'fullName' && !fullNameError) {
+          setFullNameError(issue.message);
+        } else if (field === 'email' && !emailError) {
+          setEmailError(issue.message);
+        } else if (field === 'password' && !passwordError) {
+          setPasswordError(issue.message);
+        } else if (field === 'confirmPassword' && !confirmPasswordError) {
+          setConfirmPasswordError(issue.message);
+        } else if (field === 'agreedToTerms' && !consentError) {
+          setConsentError(issue.message);
+        }
+      });
+      return false;
     }
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setEmailError(t('emailRequired'));
-      isValid = false;
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmedEmail)) {
-        setEmailError(t('emailInvalid'));
-        isValid = false;
-      }
-    }
-
-    if (!password) {
-      setPasswordError(t('passwordRequired'));
-      isValid = false;
-    } else if (password.length < 8) {
-      setPasswordError(t('passwordMinLength8'));
-      isValid = false;
-    }
-
-    if (!confirmPassword) {
-      setConfirmPasswordError(t('confirmPasswordRequired'));
-      isValid = false;
-    } else if (password !== confirmPassword) {
-      setConfirmPasswordError(t('passwordsMismatch'));
-      isValid = false;
-    }
-
-    if (!agreedToTerms) {
-      setConsentError(t('termsConsentRequired'));
-      isValid = false;
-    }
-
-    return isValid;
+    return true;
   };
 
   const handleRegister = () => {
