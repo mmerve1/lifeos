@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,9 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import { Plus, SlidersHorizontal, LogOut, CheckCircle2 } from 'lucide-react-native';
-import { Colors } from '../theme/colors';
+import { SlidersHorizontal, LogOut, CheckCircle2, Globe, Sun, Moon } from 'lucide-react-native';
+import { useTheme } from '../theme/ThemeContext';
+import { useI18n } from '../i18n';
 import { Typography } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import { AppTopBar } from '../components/dashboard/AppTopBar';
@@ -24,11 +25,10 @@ import { SecondaryButton } from '../components/common/SecondaryButton';
 import {
   mockUser,
   mockProgress,
-  mockStats,
   mockAgendaItems,
   mockModules,
 } from '../data/mockData';
-import { NavTabType, AgendaItemType } from '../types';
+import { NavTabType, AgendaItemType, StatMetricType, ModuleItemType } from '../types';
 
 interface DashboardScreenProps {
   userName?: string;
@@ -39,6 +39,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   userName = 'Merve',
   onLogout,
 }) => {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t, language, toggleLanguage } = useI18n();
+
   const [activeTab, setActiveTab] = useState<NavTabType>('home');
   const [agenda, setAgenda] = useState<AgendaItemType[]>(mockAgendaItems);
   const [showEmptyAgenda, setShowEmptyAgenda] = useState(false);
@@ -48,10 +51,91 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   // Time-aware greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return t('goodMorning');
+    if (hour < 18) return t('goodAfternoon');
+    return t('goodEvening');
   };
+
+  // Localized stats
+  const localizedStats: StatMetricType[] = useMemo(() => [
+    {
+      id: 'tasks',
+      label: t('tasksCompleted'),
+      value: '5/8',
+      subtitle: t('tasksSubtitle'),
+      icon: 'CheckCircle2',
+    },
+    {
+      id: 'goals',
+      label: t('activeGoals'),
+      value: '3',
+      subtitle: t('goalsSubtitle'),
+      icon: 'Target',
+    },
+  ], [language]);
+
+  // Localized modules list
+  const localizedModules: ModuleItemType[] = useMemo(() => [
+    {
+      id: 'career',
+      name: t('moduleCareer'),
+      description: t('moduleCareerDesc'),
+      category: 'career',
+      iconName: 'Briefcase',
+      badge: language === 'tr' ? '1 aktif' : '1 active',
+    },
+    {
+      id: 'academic',
+      name: t('moduleAcademic'),
+      description: t('moduleAcademicDesc'),
+      category: 'academic',
+      iconName: 'GraduationCap',
+    },
+    {
+      id: 'finance',
+      name: t('moduleFinance'),
+      description: t('moduleFinanceDesc'),
+      category: 'finance',
+      iconName: 'Wallet',
+    },
+    {
+      id: 'health',
+      name: t('moduleHealth'),
+      description: t('moduleHealthDesc'),
+      category: 'health',
+      iconName: 'HeartPulse',
+      badge: language === 'tr' ? 'Seri: 6 gün' : 'Streak: 6d',
+    },
+    {
+      id: 'learning',
+      name: t('moduleLearning'),
+      description: t('moduleLearningDesc'),
+      category: 'learning',
+      iconName: 'BookOpen',
+    },
+    {
+      id: 'social',
+      name: t('moduleSocial'),
+      description: t('moduleSocialDesc'),
+      category: 'social',
+      iconName: 'Users',
+    },
+    {
+      id: 'personal',
+      name: t('modulePersonal'),
+      description: t('modulePersonalDesc'),
+      category: 'personal',
+      iconName: 'Compass',
+    },
+    {
+      id: 'ai',
+      name: t('moduleAI'),
+      description: t('moduleAIDesc'),
+      category: 'ai',
+      iconName: 'Sparkles',
+      badge: 'Beta',
+    },
+  ], [language]);
 
   const handleToggleAgenda = (id: string) => {
     setAgenda((prev) =>
@@ -63,13 +147,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   const handleNotificationPress = () => {
     Alert.alert(
-      'Notification Center',
-      'You have 2 pending items:\n• 11:00 Project development coming up\n• Weekly goal review reminder'
+      language === 'tr' ? 'Bildirim Merkezi' : 'Notification Center',
+      language === 'tr'
+        ? '2 bekleyen bildiriminiz var:\n• 11:00 Proje geliştirme görevi yaklaşıyor\n• Haftalık hedef değerlendirme hatırlatması'
+        : 'You have 2 pending items:\n• 11:00 Project development coming up\n• Weekly goal review reminder'
     );
   };
 
   const handleModulePress = (moduleId: string) => {
-    const mod = mockModules.find((m) => m.id === moduleId);
+    const mod = localizedModules.find((m) => m.id === moduleId);
     setActiveModuleModal(mod ? mod.name : moduleId);
   };
 
@@ -77,8 +163,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const newTask: AgendaItemType = {
       id: Date.now().toString(),
       time: '18:00',
-      title: 'Evening workout & reflection',
-      module: 'Health',
+      title: language === 'tr' ? 'Akşam antrenmanı ve gün sonu değerlendirmesi' : 'Evening workout & reflection',
+      module: language === 'tr' ? 'Sağlık' : 'Health',
       category: 'health',
       completed: false,
     };
@@ -87,13 +173,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top App Bar */}
+        {/* Top App Bar with Theme Toggle */}
         <AppTopBar
           user={{ ...mockUser, name: userName }}
           notificationCount={2}
@@ -103,11 +189,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>
-          <Text style={[Typography.pageTitle, styles.welcomeTitle]}>
+          <Text style={[Typography.pageTitle, styles.welcomeTitle, { color: colors.textPrimary }]}>
             {getGreeting()}, {userName}!
           </Text>
-          <Text style={[Typography.body, styles.welcomeSubtitle]}>
-            Let's make today count.
+          <Text style={[Typography.body, { color: colors.textSecondary }]}>
+            {t('letsMakeCount')}
           </Text>
         </View>
 
@@ -116,22 +202,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           progress={mockProgress}
           onPress={() => {
             Alert.alert(
-              'Weekly Progress Details',
-              `Current Completion: ${mockProgress.percentage}%\nTasks Done: ${mockProgress.tasksCompleted}/${mockProgress.tasksTotal}\nActive Goals: ${mockProgress.activeGoals}\n\nCalculated strictly from defined goals and completed tasks.`
+              language === 'tr' ? 'Haftalık İlerleme Detayı' : 'Weekly Progress Details',
+              language === 'tr'
+                ? `Mevcut İlerleme: %${mockProgress.percentage}\nTamamlanan: ${mockProgress.tasksCompleted}/${mockProgress.tasksTotal}\nAktif Hedef: ${mockProgress.activeGoals}\n\nTamamen gerçek hedef ve görev verilerinizden hesaplanmaktadır.`
+                : `Current Completion: ${mockProgress.percentage}%\nTasks Done: ${mockProgress.tasksCompleted}/${mockProgress.tasksTotal}\nActive Goals: ${mockProgress.activeGoals}\n\nCalculated strictly from defined goals and completed tasks.`
             );
           }}
         />
 
         {/* Quick Stats Grid */}
         <View style={styles.statsGrid}>
-          {mockStats.map((stat) => (
+          {localizedStats.map((stat) => (
             <StatCard
               key={stat.id}
               item={stat}
               onPress={() => {
                 Alert.alert(
                   stat.label,
-                  `Details for ${stat.label}: ${stat.value} (${stat.subtitle})`
+                  `${stat.label}: ${stat.value} (${stat.subtitle})`
                 );
               }}
             />
@@ -140,33 +228,35 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* Today's Agenda Section */}
         <View style={styles.sectionHeader}>
-          <Text style={[Typography.sectionTitle, styles.sectionTitle]}>
-            Today's agenda
+          <Text style={[Typography.sectionTitle, { color: colors.textPrimary }]}>
+            {t('todaysAgenda')}
           </Text>
           <View style={styles.headerRightActions}>
             {/* Dev toggle to inspect empty state */}
             <Pressable
               onPress={() => setShowEmptyAgenda(!showEmptyAgenda)}
-              style={styles.filterPill}
+              style={[styles.filterPill, { backgroundColor: colors.surface, borderColor: colors.border }]}
               hitSlop={6}
             >
-              <SlidersHorizontal size={12} color={Colors.textSecondary} />
-              <Text style={[Typography.caption, styles.filterText]}>
-                {showEmptyAgenda ? 'Show Data' : 'Test Empty'}
+              <SlidersHorizontal size={12} color={colors.textSecondary} />
+              <Text style={[Typography.caption, { color: colors.textSecondary, fontSize: 11 }]}>
+                {showEmptyAgenda ? t('showData') : t('testEmpty')}
               </Text>
             </Pressable>
 
             <Pressable
               onPress={() =>
                 Alert.alert(
-                  "Today's Agenda",
-                  'Chronological view of all tasks and events scheduled for today.'
+                  t('todaysAgenda'),
+                  language === 'tr'
+                    ? 'Bugün için planlanan tüm görev ve etkinliklerin kronolojik listesi.'
+                    : 'Chronological view of all tasks and events scheduled for today.'
                 )
               }
               hitSlop={8}
             >
-              <Text style={[Typography.captionBold, styles.viewAllText]}>
-                View all
+              <Text style={[Typography.captionBold, { color: colors.primary }]}>
+                {t('viewAll')}
               </Text>
             </Pressable>
           </View>
@@ -174,9 +264,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {showEmptyAgenda || agenda.length === 0 ? (
           <EmptyState
-            title="No tasks scheduled today"
-            description="Your agenda is clear for today. Plan your next milestone or review your active goals."
-            actionLabel="Add your first task"
+            title={t('emptyAgendaTitle')}
+            description={t('emptyAgendaDesc')}
+            actionLabel={t('addFirstTask')}
             onAction={handleAddSampleTask}
           />
         ) : (
@@ -186,7 +276,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               item={item}
               onToggle={handleToggleAgenda}
               onPress={(id) => {
-                Alert.alert('Agenda Item', `Details for: ${item.title} (${item.module})`);
+                Alert.alert(t('todaysAgenda'), `${item.title} (${item.module})`);
               }}
             />
           ))
@@ -194,15 +284,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* Your Spaces (Modules) Section */}
         <View style={[styles.sectionHeader, { marginTop: Spacing.xl }]}>
-          <Text style={[Typography.sectionTitle, styles.sectionTitle]}>
-            Your spaces
+          <Text style={[Typography.sectionTitle, { color: colors.textPrimary }]}>
+            {t('yourSpaces')}
           </Text>
-          <Text style={[Typography.caption, styles.spacesSubtitle]}>
-            8 Modular Hubs
+          <Text style={[Typography.caption, { color: colors.textSecondary }]}>
+            {t('spacesSubtitle')}
           </Text>
         </View>
 
-        {mockModules.map((module) => (
+        {localizedModules.map((module) => (
           <ModuleCard
             key={module.id}
             module={module}
@@ -221,54 +311,97 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         animationType="fade"
         onRequestClose={() => setProfileModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+            ]}
+          >
             <View style={styles.profileHeader}>
-              <View style={styles.modalAvatarCircle}>
-                <Text style={styles.modalAvatarText}>
+              <View
+                style={[
+                  styles.modalAvatarCircle,
+                  { backgroundColor: colors.surface, borderColor: colors.primary },
+                ]}
+              >
+                <Text style={[styles.modalAvatarText, { color: colors.secondaryViolet }]}>
                   {userName.charAt(0).toUpperCase()}
                 </Text>
               </View>
-              <Text style={[Typography.cardTitle, styles.modalName]}>
+              <Text style={[Typography.cardTitle, styles.modalName, { color: colors.textPrimary }]}>
                 {userName}
               </Text>
-              <Text style={[Typography.caption, styles.modalEmail]}>
+              <Text style={[Typography.caption, { color: colors.textSecondary }]}>
                 {mockUser.email}
               </Text>
             </View>
 
-            <View style={styles.modalDivider} />
+            <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
 
-            <View style={styles.modalInfoRow}>
-              <Text style={[Typography.body, styles.modalInfoLabel]}>
-                Platform Version
-              </Text>
-              <Text style={[Typography.captionBold, styles.modalInfoValue]}>
-                LifeOS v1.0 (MVP)
-              </Text>
+            {/* Quick Preference: Language Switcher */}
+            <View style={styles.modalSettingRow}>
+              <View style={styles.settingLabelGroup}>
+                <Globe size={18} color={colors.textSecondary} />
+                <Text style={[Typography.body, { color: colors.textPrimary }]}>
+                  {t('languageSetting')}
+                </Text>
+              </View>
+              <Pressable
+                onPress={toggleLanguage}
+                style={[styles.modalTogglePill, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={[Typography.captionBold, { color: colors.primary }]}>
+                  {language === 'tr' ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+                </Text>
+              </Pressable>
             </View>
 
+            {/* Quick Preference: Theme Switcher */}
+            <View style={styles.modalSettingRow}>
+              <View style={styles.settingLabelGroup}>
+                {isDark ? (
+                  <Moon size={18} color={colors.textSecondary} />
+                ) : (
+                  <Sun size={18} color={colors.warning} />
+                )}
+                <Text style={[Typography.body, { color: colors.textPrimary }]}>
+                  {t('themeSetting')}
+                </Text>
+              </View>
+              <Pressable
+                onPress={toggleTheme}
+                style={[styles.modalTogglePill, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={[Typography.captionBold, { color: colors.primary }]}>
+                  {isDark ? t('darkMode') : t('lightMode')}
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={[styles.modalDivider, { backgroundColor: colors.border, marginTop: Spacing.md }]} />
+
             <View style={styles.modalInfoRow}>
-              <Text style={[Typography.body, styles.modalInfoLabel]}>
-                Theme
+              <Text style={[Typography.body, { color: colors.textSecondary }]}>
+                {t('platformVersion')}
               </Text>
-              <Text style={[Typography.captionBold, styles.modalInfoValue]}>
-                Dark Premium (Violet)
+              <Text style={[Typography.captionBold, { color: colors.textPrimary }]}>
+                LifeOS v1.0 (MVP)
               </Text>
             </View>
 
             <View style={styles.modalActions}>
               <SecondaryButton
-                label="Log out"
-                icon={<LogOut size={16} color={Colors.danger} />}
-                textStyle={{ color: Colors.danger }}
+                label={t('logout')}
+                icon={<LogOut size={16} color={colors.danger} />}
+                textStyle={{ color: colors.danger }}
                 onPress={() => {
                   setProfileModalVisible(false);
                   onLogout();
                 }}
               />
               <PrimaryButton
-                label="Close"
+                label={t('close')}
                 onPress={() => setProfileModalVisible(false)}
                 style={{ marginTop: Spacing.sm }}
               />
@@ -284,22 +417,28 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         animationType="slide"
         onRequestClose={() => setActiveModuleModal(null)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+            ]}
+          >
             <View style={styles.moduleModalHeader}>
-              <CheckCircle2 size={24} color={Colors.primary} />
-              <Text style={[Typography.cardTitle, styles.moduleModalTitle]}>
-                {activeModuleModal} Module
+              <CheckCircle2 size={24} color={colors.primary} />
+              <Text style={[Typography.cardTitle, { color: colors.textPrimary }]}>
+                {activeModuleModal}
               </Text>
             </View>
 
-            <Text style={[Typography.body, styles.moduleModalDesc]}>
-              This space will host modular business rules, data sets, and views for{' '}
-              {activeModuleModal}. Clean Architecture & .NET 10 API endpoints will bind to this hub.
+            <Text style={[Typography.body, { color: colors.textSecondary, lineHeight: 20 }]}>
+              {language === 'tr'
+                ? `Bu alan, ${activeModuleModal} modülüne özel iş kurallarını, veritabanı kayıtlarını ve bileşenleri barındıracaktır. Clean Architecture & .NET 10 Web API uçları bu modüle bağlanacaktır.`
+                : `This space will host modular business rules, data sets, and views for ${activeModuleModal}. Clean Architecture & .NET 10 API endpoints will bind to this hub.`}
             </Text>
 
             <PrimaryButton
-              label="Understood"
+              label={language === 'tr' ? 'Tamam' : 'Understood'}
               onPress={() => setActiveModuleModal(null)}
               style={{ marginTop: Spacing.lg }}
             />
@@ -315,7 +454,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           if (tab !== 'home') {
             Alert.alert(
               tab.charAt(0).toUpperCase() + tab.slice(1),
-              `Navigating to the ${tab} view. In this MVP release, Main Dashboard is the primary interactive hub.`
+              language === 'tr'
+                ? `${t(('nav' + tab.charAt(0).toUpperCase() + tab.slice(1)) as any)} görünümüne geçiliyor. MVP sürümünde Ana Sayfa ana merkezdir.`
+                : `Navigating to the ${tab} view. In this MVP release, Main Dashboard is the primary interactive hub.`
             );
           }
         }}
@@ -327,7 +468,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
@@ -340,11 +480,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   welcomeTitle: {
-    color: Colors.textPrimary,
     marginBottom: 2,
-  },
-  welcomeSubtitle: {
-    color: Colors.textSecondary,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -356,9 +492,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    color: Colors.textPrimary,
   },
   headerRightActions: {
     flexDirection: 'row',
@@ -372,23 +505,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  filterText: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-  },
-  viewAllText: {
-    color: Colors.primary,
-  },
-  spacesSubtitle: {
-    color: Colors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.screenPadding,
@@ -396,9 +516,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: Colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.modal,
     padding: Spacing.xl,
   },
@@ -410,40 +528,44 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: Colors.surface,
     borderWidth: 2,
-    borderColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.sm,
   },
   modalAvatarText: {
-    color: Colors.secondaryViolet,
     fontSize: 24,
     fontWeight: '700',
   },
   modalName: {
-    color: Colors.textPrimary,
     marginBottom: 2,
-  },
-  modalEmail: {
-    color: Colors.textSecondary,
   },
   modalDivider: {
     height: 1,
-    backgroundColor: Colors.border,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  modalSettingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs + 2,
+    marginBottom: Spacing.xs,
+  },
+  settingLabelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  modalTogglePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
   },
   modalInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: Spacing.md,
-  },
-  modalInfoLabel: {
-    color: Colors.textSecondary,
-  },
-  modalInfoValue: {
-    color: Colors.textPrimary,
   },
   modalActions: {
     marginTop: Spacing.md,
@@ -453,12 +575,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     marginBottom: Spacing.sm,
-  },
-  moduleModalTitle: {
-    color: Colors.textPrimary,
-  },
-  moduleModalDesc: {
-    color: Colors.textSecondary,
-    lineHeight: 20,
   },
 });

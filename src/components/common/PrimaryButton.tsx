@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Typography } from '../../theme/typography';
 import { Sizes, Radius, Spacing } from '../../theme/spacing';
 
@@ -32,6 +32,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   textStyle,
   fullWidth = true,
 }) => {
+  const { colors } = useTheme();
   const isInteractive = !disabled && !loading;
 
   return (
@@ -42,9 +43,13 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       accessibilityState={{ disabled: !isInteractive, busy: loading }}
       style={({ pressed }) => [
         styles.button,
+        { backgroundColor: colors.primary },
         fullWidth && styles.fullWidth,
-        pressed && styles.pressed,
-        disabled && styles.disabled,
+        pressed && [styles.pressed, { backgroundColor: colors.primaryPressed }],
+        disabled && [
+          styles.disabled,
+          { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+        ],
         style,
       ]}
     >
@@ -57,7 +62,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
             style={[
               Typography.button,
               styles.text,
-              disabled && styles.textDisabled,
+              disabled && { color: colors.textSecondary, opacity: 0.6 },
               textStyle,
             ]}
           >
@@ -72,7 +77,6 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     height: Sizes.buttonHeight,
-    backgroundColor: Colors.primary,
     borderRadius: Radius.input,
     flexDirection: 'row',
     alignItems: 'center',
@@ -84,22 +88,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   pressed: {
-    backgroundColor: Colors.primaryPressed,
     opacity: 0.92,
     transform: [{ scale: 0.99 }],
   },
   disabled: {
-    backgroundColor: Colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   text: {
     color: '#FFFFFF',
     fontWeight: '600',
     letterSpacing: 0.2,
-  },
-  textDisabled: {
-    color: Colors.textSecondary,
-    opacity: 0.6,
   },
 });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Sparkles } from 'lucide-react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Typography } from '../../theme/typography';
 import { Spacing, Radius } from '../../theme/spacing';
 import { PrimaryButton } from './PrimaryButton';
@@ -21,13 +21,27 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onAction,
   icon,
 }) => {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <View style={styles.iconCircle}>
-        {icon || <Sparkles size={24} color={Colors.primary} strokeWidth={2} />}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+        },
+      ]}
+    >
+      <View style={[styles.iconCircle, { backgroundColor: colors.surfaceElevated }]}>
+        {icon || <Sparkles size={24} color={colors.primary} strokeWidth={2} />}
       </View>
-      <Text style={[Typography.cardTitle, styles.title]}>{title}</Text>
-      <Text style={[Typography.caption, styles.description]}>{description}</Text>
+      <Text style={[Typography.cardTitle, styles.title, { color: colors.textPrimary }]}>
+        {title}
+      </Text>
+      <Text style={[Typography.caption, styles.description, { color: colors.textSecondary }]}>
+        {description}
+      </Text>
       {actionLabel && onAction && (
         <View style={styles.buttonWrapper}>
           <PrimaryButton label={actionLabel} onPress={onAction} />
@@ -39,9 +53,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.card,
     padding: Spacing.xl,
     alignItems: 'center',
@@ -52,18 +64,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
   },
   title: {
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
     textAlign: 'center',
   },
   description: {
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.lg,
     maxWidth: 280,

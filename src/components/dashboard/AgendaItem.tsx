@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Check, Clock } from 'lucide-react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Typography } from '../../theme/typography';
 import { Spacing, Radius } from '../../theme/spacing';
 import { AgendaItemType } from '../../types';
@@ -17,12 +17,17 @@ export const AgendaItem: React.FC<AgendaItemProps> = ({
   onToggle,
   onPress,
 }) => {
-  const moduleColor = Colors.modules[item.category] || Colors.primary;
+  const { colors } = useTheme();
+  const moduleColor = colors.modules[item.category] || colors.primary;
 
   return (
     <Pressable
       onPress={() => onPress?.(item.id)}
-      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.container,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        pressed && { backgroundColor: colors.surfaceElevated },
+      ]}
     >
       <Pressable
         onPress={() => onToggle(item.id)}
@@ -31,7 +36,8 @@ export const AgendaItem: React.FC<AgendaItemProps> = ({
         accessibilityState={{ checked: item.completed }}
         style={[
           styles.checkbox,
-          item.completed && styles.checkboxCompleted,
+          { borderColor: colors.border, backgroundColor: colors.surfaceElevated },
+          item.completed && { backgroundColor: colors.success, borderColor: colors.success },
         ]}
       >
         {item.completed && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
@@ -40,8 +46,10 @@ export const AgendaItem: React.FC<AgendaItemProps> = ({
       <View style={styles.contentCol}>
         <View style={styles.topMeta}>
           <View style={styles.timeRow}>
-            <Clock size={12} color={Colors.textSecondary} strokeWidth={2} />
-            <Text style={[Typography.caption, styles.timeText]}>{item.time}</Text>
+            <Clock size={12} color={colors.textSecondary} strokeWidth={2} />
+            <Text style={[Typography.caption, { color: colors.textSecondary, fontWeight: '500' }]}>
+              {item.time}
+            </Text>
           </View>
 
           <View
@@ -61,7 +69,8 @@ export const AgendaItem: React.FC<AgendaItemProps> = ({
           style={[
             Typography.body,
             styles.titleText,
-            item.completed && styles.titleCompleted,
+            { color: colors.textPrimary },
+            item.completed && [styles.titleCompleted, { color: colors.textSecondary }],
           ]}
           numberOfLines={1}
         >
@@ -76,30 +85,19 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.card,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     gap: Spacing.md,
-  },
-  pressed: {
-    backgroundColor: Colors.surfaceElevated,
   },
   checkbox: {
     width: 22,
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  checkboxCompleted: {
-    backgroundColor: Colors.success,
-    borderColor: Colors.success,
   },
   contentCol: {
     flex: 1,
@@ -114,10 +112,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-  },
-  timeText: {
-    color: Colors.textSecondary,
-    fontWeight: '500',
   },
   moduleBadge: {
     flexDirection: 'row',
@@ -138,11 +132,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   titleText: {
-    color: Colors.textPrimary,
     fontWeight: '500',
   },
   titleCompleted: {
-    color: Colors.textSecondary,
     textDecorationLine: 'line-through',
   },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
+import { useI18n } from '../../i18n';
 import { Typography } from '../../theme/typography';
 import { Spacing } from '../../theme/spacing';
 
@@ -13,6 +14,9 @@ export const LifeOSLogo: React.FC<LifeOSLogoProps> = ({
   size = 'md',
   showSlogan = true,
 }) => {
+  const { colors } = useTheme();
+  const { t } = useI18n();
+
   const getLogoSize = () => {
     switch (size) {
       case 'sm':
@@ -30,14 +34,36 @@ export const LifeOSLogo: React.FC<LifeOSLogoProps> = ({
   return (
     <View style={styles.container}>
       <View style={[styles.brandRow, { gap }]}>
-        <Text style={[Typography.pageTitle, styles.wordmark, { fontSize: title }]}>
+        <Text
+          style={[
+            Typography.pageTitle,
+            styles.wordmark,
+            { fontSize: title, color: colors.textPrimary },
+          ]}
+        >
           LifeOS
         </Text>
-        <View style={[styles.dot, { width: dot, height: dot, borderRadius: dot / 2 }]} />
+        <View
+          style={[
+            styles.dot,
+            {
+              width: dot,
+              height: dot,
+              borderRadius: dot / 2,
+              backgroundColor: colors.primary,
+            },
+          ]}
+        />
       </View>
       {showSlogan && (
-        <Text style={[Typography.caption, styles.slogan]}>
-          Your life. Your goals. Your next step.
+        <Text
+          style={[
+            Typography.caption,
+            styles.slogan,
+            { color: colors.textSecondary },
+          ]}
+        >
+          {t('brandSlogan')}
         </Text>
       )}
     </View>
@@ -53,16 +79,13 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   wordmark: {
-    color: Colors.textPrimary,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
   dot: {
-    backgroundColor: Colors.primary,
     marginBottom: 2,
   },
   slogan: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
     letterSpacing: 0.2,
   },

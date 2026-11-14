@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Typography } from '../../theme/typography';
 import { Sizes, Radius, Spacing } from '../../theme/spacing';
 
@@ -34,6 +34,7 @@ export const TextInput: React.FC<CustomTextInputProps> = ({
   onBlur,
   ...rest
 }) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
 
   const hasError = !!error;
@@ -41,17 +42,26 @@ export const TextInput: React.FC<CustomTextInputProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        <Text style={[Typography.label, styles.label]}>
+        <Text style={[Typography.label, { color: colors.textPrimary }]}>
           {label}
-          {required && <Text style={styles.requiredMark}> *</Text>}
+          {required && <Text style={{ color: colors.primary }}> *</Text>}
         </Text>
       </View>
 
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.inputFocused,
-          hasError && styles.inputError,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+          isFocused && {
+            borderColor: colors.borderFocused,
+            backgroundColor: colors.surfaceElevated,
+          },
+          hasError && {
+            borderColor: colors.borderError,
+          },
           !editable && styles.inputDisabled,
         ]}
       >
@@ -61,9 +71,10 @@ export const TextInput: React.FC<CustomTextInputProps> = ({
           style={[
             Typography.bodyLarge,
             styles.nativeInput,
-            !editable && styles.nativeInputDisabled,
+            { color: colors.textPrimary },
+            !editable && { color: colors.textSecondary },
           ]}
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           editable={editable}
           onFocus={(e) => {
             setIsFocused(true);
@@ -73,7 +84,7 @@ export const TextInput: React.FC<CustomTextInputProps> = ({
             setIsFocused(false);
             onBlur?.(e);
           }}
-          selectionColor={Colors.primary}
+          selectionColor={colors.primary}
           {...rest}
         />
 
@@ -90,9 +101,13 @@ export const TextInput: React.FC<CustomTextInputProps> = ({
       </View>
 
       {hasError ? (
-        <Text style={[Typography.caption, styles.errorText]}>{error}</Text>
+        <Text style={[Typography.caption, { color: colors.danger, marginTop: Spacing.xs, marginLeft: 2 }]}>
+          {error}
+        </Text>
       ) : helperText ? (
-        <Text style={[Typography.caption, styles.helperText]}>{helperText}</Text>
+        <Text style={[Typography.caption, { color: colors.textSecondary, marginTop: Spacing.xs, marginLeft: 2 }]}>
+          {helperText}
+        </Text>
       ) : null}
     </View>
   );
@@ -107,28 +122,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: Spacing.xs + 2,
   },
-  label: {
-    color: Colors.textPrimary,
-  },
-  requiredMark: {
-    color: Colors.primary,
-  },
   inputContainer: {
     height: Sizes.inputHeight,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.input,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-  },
-  inputFocused: {
-    borderColor: Colors.borderFocused,
-    backgroundColor: Colors.surfaceElevated,
-  },
-  inputError: {
-    borderColor: Colors.borderError,
   },
   inputDisabled: {
     opacity: 0.6,
@@ -143,20 +143,6 @@ const styles = StyleSheet.create({
   nativeInput: {
     flex: 1,
     height: '100%',
-    color: Colors.textPrimary,
     paddingVertical: 0,
-  },
-  nativeInputDisabled: {
-    color: Colors.textSecondary,
-  },
-  errorText: {
-    color: Colors.danger,
-    marginTop: Spacing.xs,
-    marginLeft: 2,
-  },
-  helperText: {
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    marginLeft: 2,
   },
 });

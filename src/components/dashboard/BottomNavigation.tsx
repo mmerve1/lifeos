@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Home, Calendar, CheckSquare, Sparkles, User } from 'lucide-react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
+import { useI18n, TranslationKey } from '../../i18n';
 import { Typography } from '../../theme/typography';
 import { Spacing } from '../../theme/spacing';
 import { NavTabType } from '../../types';
@@ -13,7 +14,7 @@ interface BottomNavigationProps {
 
 interface TabItemConfig {
   key: NavTabType;
-  label: string;
+  labelKey: TranslationKey;
   renderIcon: (color: string, focused: boolean) => React.ReactNode;
 }
 
@@ -21,40 +22,43 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const { colors } = useTheme();
+  const { t } = useI18n();
+
   const tabs: TabItemConfig[] = [
     {
       key: 'home',
-      label: 'Home',
+      labelKey: 'navHome',
       renderIcon: (color) => <Home size={20} color={color} strokeWidth={2} />,
     },
     {
       key: 'calendar',
-      label: 'Calendar',
+      labelKey: 'navCalendar',
       renderIcon: (color) => <Calendar size={20} color={color} strokeWidth={2} />,
     },
     {
       key: 'tasks',
-      label: 'Tasks',
+      labelKey: 'navTasks',
       renderIcon: (color) => <CheckSquare size={20} color={color} strokeWidth={2} />,
     },
     {
       key: 'ai',
-      label: 'AI',
+      labelKey: 'navAI',
       renderIcon: (color) => <Sparkles size={20} color={color} strokeWidth={2} />,
     },
     {
       key: 'profile',
-      label: 'Profile',
+      labelKey: 'navProfile',
       renderIcon: (color) => <User size={20} color={color} strokeWidth={2} />,
     },
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
       <View style={styles.navBar}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
-          const color = isActive ? Colors.primary : Colors.textSecondary;
+          const color = isActive ? colors.primary : colors.textSecondary;
 
           return (
             <Pressable
@@ -65,7 +69,12 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               accessibilityState={{ selected: isActive }}
               style={styles.tabButton}
             >
-              <View style={[styles.iconWrapper, isActive && styles.iconWrapperActive]}>
+              <View
+                style={[
+                  styles.iconWrapper,
+                  isActive && { backgroundColor: `${colors.primary}1F` },
+                ]}
+              >
                 {tab.renderIcon(color, isActive)}
               </View>
               <Text
@@ -75,7 +84,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   { color, fontWeight: isActive ? '600' : '400' },
                 ]}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </Text>
             </Pressable>
           );
@@ -87,9 +96,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.background,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.lg,
   },
@@ -111,9 +118,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-  },
-  iconWrapperActive: {
-    backgroundColor: 'rgba(139, 124, 246, 0.12)',
   },
   tabLabel: {
     fontSize: 11,

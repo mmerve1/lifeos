@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Typography } from '../../theme/typography';
 
 interface AvatarProps {
@@ -14,6 +14,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   size = 40,
   onPress,
 }) => {
+  const { colors } = useTheme();
+
   const content = (
     <View
       style={[
@@ -22,14 +24,19 @@ export const Avatar: React.FC<AvatarProps> = ({
           width: size,
           height: size,
           borderRadius: size / 2,
+          backgroundColor: colors.surfaceElevated,
+          borderColor: colors.primary,
         },
       ]}
     >
       <Text
         style={[
           Typography.captionBold,
-          styles.initialsText,
-          { fontSize: Math.max(12, Math.floor(size * 0.38)) },
+          {
+            color: colors.secondaryViolet,
+            fontSize: Math.max(12, Math.floor(size * 0.38)),
+            fontWeight: '700',
+          },
         ]}
       >
         {initials.toUpperCase()}
@@ -64,14 +71,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.96 }],
   },
   avatarCircle: {
-    backgroundColor: Colors.surfaceElevated,
     borderWidth: 1.5,
-    borderColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  initialsText: {
-    color: Colors.secondaryViolet,
-    fontWeight: '700',
   },
 });

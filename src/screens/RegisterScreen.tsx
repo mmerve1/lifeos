@@ -9,8 +9,9 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import { User, Mail, Check } from 'lucide-react-native';
-import { Colors } from '../theme/colors';
+import { User, Mail, Check, Globe, Sun, Moon } from 'lucide-react-native';
+import { useTheme } from '../theme/ThemeContext';
+import { useI18n } from '../i18n';
 import { Typography } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import { LifeOSLogo } from '../components/common/LifeOSLogo';
@@ -28,6 +29,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onNavigateToLogin,
   onRegisterSuccess,
 }) => {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t, language, toggleLanguage } = useI18n();
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,40 +56,40 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     setConsentError(null);
 
     if (!fullName.trim()) {
-      setFullNameError('Full name is required');
+      setFullNameError(t('fullNameRequired'));
       isValid = false;
     }
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      setEmailError('Email address is required');
+      setEmailError(t('emailRequired'));
       isValid = false;
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(trimmedEmail)) {
-        setEmailError('Please enter a valid email address');
+        setEmailError(t('emailInvalid'));
         isValid = false;
       }
     }
 
     if (!password) {
-      setPasswordError('Password is required');
+      setPasswordError(t('passwordRequired'));
       isValid = false;
     } else if (password.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+      setPasswordError(t('passwordMinLength8'));
       isValid = false;
     }
 
     if (!confirmPassword) {
-      setConfirmPasswordError('Please confirm your password');
+      setConfirmPasswordError(t('confirmPasswordRequired'));
       isValid = false;
     } else if (password !== confirmPassword) {
-      setConfirmPasswordError('Passwords do not match');
+      setConfirmPasswordError(t('passwordsMismatch'));
       isValid = false;
     }
 
     if (!agreedToTerms) {
-      setConsentError('You must agree to the Terms and Privacy Policy to continue');
+      setConsentError(t('termsConsentRequired'));
       isValid = false;
     }
 
@@ -99,7 +103,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
     setTimeout(() => {
       setIsLoading(false);
-      setSuccessMessage('Account created successfully! Preparing your workspace...');
+      setSuccessMessage(t('registerSuccess'));
       setTimeout(() => {
         onRegisterSuccess(fullName.trim(), email.trim());
       }, 800);
@@ -115,7 +119,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardContainer}
+      style={[styles.keyboardContainer, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -124,7 +128,42 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {/* Ambient Glow */}
-        <View style={styles.glowCircle} pointerEvents="none" />
+        <View
+          style={[
+            styles.glowCircle,
+            { backgroundColor: isDark ? 'rgba(139, 124, 246, 0.08)' : 'rgba(124, 58, 237, 0.05)' },
+          ]}
+          pointerEvents="none"
+        />
+
+        {/* Top Controls: Language & Theme Switch */}
+        <View style={styles.topControlRow}>
+          <Pressable
+            onPress={toggleLanguage}
+            hitSlop={6}
+            style={[styles.pillButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <Globe size={14} color={colors.textSecondary} />
+            <Text style={[Typography.captionBold, { color: colors.textPrimary }]}>
+              {language.toUpperCase()}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={toggleTheme}
+            hitSlop={6}
+            style={[styles.pillButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            {isDark ? (
+              <Sun size={14} color={colors.warning} />
+            ) : (
+              <Moon size={14} color={colors.primary} />
+            )}
+            <Text style={[Typography.caption, { color: colors.textSecondary }]}>
+              {isDark ? t('lightMode') : t('darkMode')}
+            </Text>
+          </Pressable>
+        </View>
 
         {/* Header */}
         <View style={styles.brandContainer}>
@@ -132,18 +171,18 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
         </View>
 
         <View style={styles.titleContainer}>
-          <Text style={[Typography.pageTitle, styles.pageTitle]}>
-            Create your account
+          <Text style={[Typography.pageTitle, styles.pageTitle, { color: colors.textPrimary }]}>
+            {t('createAccount')}
           </Text>
-          <Text style={[Typography.body, styles.subtitle]}>
-            A more organized life starts here.
+          <Text style={[Typography.body, { color: colors.textSecondary }]}>
+            {t('registerSubtitle')}
           </Text>
         </View>
 
         {successMessage && (
           <InlineFeedback
             type="success"
-            title="Success"
+            title={language === 'tr' ? 'Başarılı' : 'Success'}
             message={successMessage}
           />
         )}
@@ -151,8 +190,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
         {/* Form Fields */}
         <View style={styles.formContainer}>
           <TextInput
-            label="Full name"
-            placeholder="Your name"
+            label={t('fullNameLabel')}
+            placeholder={t('fullNamePlaceholder')}
             value={fullName}
             onChangeText={(text) => {
               setFullName(text);
@@ -160,14 +199,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             }}
             error={fullNameError}
             leadingIcon={
-              <User size={18} color={Colors.textSecondary} strokeWidth={2} />
+              <User size={18} color={colors.textSecondary} strokeWidth={2} />
             }
             required
           />
 
           <TextInput
-            label="Email address"
-            placeholder="name@example.com"
+            label={t('emailLabel')}
+            placeholder={t('emailPlaceholder')}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -178,27 +217,27 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             autoCorrect={false}
             error={emailError}
             leadingIcon={
-              <Mail size={18} color={Colors.textSecondary} strokeWidth={2} />
+              <Mail size={18} color={colors.textSecondary} strokeWidth={2} />
             }
             required
           />
 
           <PasswordInput
-            label="Password"
-            placeholder="Create a strong password"
+            label={t('passwordLabel')}
+            placeholder={t('passwordPlaceholder')}
             value={password}
             onChangeText={(text) => {
               setPassword(text);
               if (passwordError) setPasswordError(null);
             }}
-            helperText="At least 8 characters"
+            helperText={t('passwordRuleHint')}
             error={passwordError}
             required
           />
 
           <PasswordInput
-            label="Confirm password"
-            placeholder="Re-enter your password"
+            label={t('confirmPasswordLabel')}
+            placeholder={t('confirmPasswordPlaceholder')}
             value={confirmPassword}
             onChangeText={(text) => {
               setConfirmPassword(text);
@@ -220,41 +259,63 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               accessibilityState={{ checked: agreedToTerms }}
               style={[
                 styles.checkbox,
-                agreedToTerms && styles.checkboxActive,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+                agreedToTerms && { backgroundColor: colors.primary, borderColor: colors.primary },
               ]}
             >
               {agreedToTerms && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
             </Pressable>
 
             <View style={styles.consentTextContainer}>
-              <Text style={[Typography.caption, styles.consentText]}>
-                I accept the{' '}
-                <Text
-                  onPress={() => showDocumentInfo('Terms of Service')}
-                  style={styles.consentLink}
-                >
-                  Terms of Service
-                </Text>{' '}
-                and{' '}
-                <Text
-                  onPress={() => showDocumentInfo('Privacy Policy')}
-                  style={styles.consentLink}
-                >
-                  Privacy Policy
-                </Text>
-                .
+              <Text style={[Typography.caption, styles.consentText, { color: colors.textSecondary }]}>
+                {language === 'tr' ? (
+                  <>
+                    <Text
+                      onPress={() => showDocumentInfo(t('termsOfService'))}
+                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
+                    >
+                      {t('termsOfService')}
+                    </Text>{' '}
+                    {t('and')}{' '}
+                    <Text
+                      onPress={() => showDocumentInfo(t('privacyPolicy'))}
+                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
+                    >
+                      {t('privacyPolicy')}
+                    </Text>
+                    'nı kabul ediyorum.
+                  </>
+                ) : (
+                  <>
+                    {t('termsConsentPrefix')}{' '}
+                    <Text
+                      onPress={() => showDocumentInfo(t('termsOfService'))}
+                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
+                    >
+                      {t('termsOfService')}
+                    </Text>{' '}
+                    {t('and')}{' '}
+                    <Text
+                      onPress={() => showDocumentInfo(t('privacyPolicy'))}
+                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
+                    >
+                      {t('privacyPolicy')}
+                    </Text>
+                    .
+                  </>
+                )}
               </Text>
             </View>
           </View>
           {consentError && (
-            <Text style={[Typography.caption, styles.consentErrorText]}>
+            <Text style={[Typography.caption, { color: colors.danger, marginTop: -Spacing.xs, marginBottom: Spacing.md }]}>
               {consentError}
             </Text>
           )}
 
           {/* Primary Action Button */}
           <PrimaryButton
-            label="Create account"
+            label={t('createAccountButton')}
             onPress={handleRegister}
             loading={isLoading}
             disabled={isLoading}
@@ -264,12 +325,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
         {/* Footer */}
         <View style={styles.footerContainer}>
-          <Text style={[Typography.body, styles.footerText]}>
-            Already have an account?{' '}
+          <Text style={[Typography.body, { color: colors.textSecondary }]}>
+            {t('alreadyHaveAccount')}{' '}
           </Text>
           <Pressable onPress={onNavigateToLogin} hitSlop={8}>
-            <Text style={[Typography.button, styles.logInLink]}>
-              Log in
+            <Text style={[Typography.button, { color: colors.primary }]}>
+              {t('logInButton')}
             </Text>
           </Pressable>
         </View>
@@ -281,7 +342,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -297,20 +357,31 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(139, 124, 246, 0.08)',
+  },
+  topControlRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  pillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
   },
   brandContainer: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   titleContainer: {
     marginBottom: Spacing.xl,
   },
   pageTitle: {
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
   },
   formContainer: {
     width: '100%',
@@ -327,31 +398,18 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
-  },
-  checkboxActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
   },
   consentTextContainer: {
     flex: 1,
   },
   consentText: {
-    color: Colors.textSecondary,
     lineHeight: 18,
   },
   consentLink: {
-    color: Colors.secondaryViolet,
     textDecorationLine: 'underline',
-  },
-  consentErrorText: {
-    color: Colors.danger,
-    marginTop: -Spacing.xs,
-    marginBottom: Spacing.md,
   },
   createButton: {
     marginTop: Spacing.sm,
@@ -361,11 +419,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: Spacing.xl,
-  },
-  footerText: {
-    color: Colors.textSecondary,
-  },
-  logInLink: {
-    color: Colors.primary,
   },
 });

@@ -11,7 +11,7 @@ import {
   Sparkles,
   ChevronRight,
 } from 'lucide-react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Typography } from '../../theme/typography';
 import { Spacing, Radius } from '../../theme/spacing';
 import { ModuleItemType } from '../../types';
@@ -22,7 +22,8 @@ interface ModuleCardProps {
 }
 
 export const ModuleCard: React.FC<ModuleCardProps> = ({ module, onPress }) => {
-  const moduleColor = Colors.modules[module.category] || Colors.primary;
+  const { colors } = useTheme();
+  const moduleColor = colors.modules[module.category] || colors.primary;
 
   const renderIcon = () => {
     const iconProps = { size: 20, color: moduleColor, strokeWidth: 2 };
@@ -53,7 +54,11 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module, onPress }) => {
       onPress={() => onPress(module.id)}
       accessibilityRole="button"
       accessibilityLabel={`Open ${module.name} module`}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        pressed && { borderColor: colors.secondaryViolet, backgroundColor: colors.surfaceElevated },
+      ]}
     >
       <View style={styles.leftCol}>
         <View
@@ -67,7 +72,7 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module, onPress }) => {
 
         <View style={styles.textContainer}>
           <View style={styles.titleRow}>
-            <Text style={[Typography.cardTitle, styles.titleText]}>
+            <Text style={[Typography.cardTitle, styles.titleText, { color: colors.textPrimary }]}>
               {module.name}
             </Text>
             {module.badge && (
@@ -83,32 +88,26 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module, onPress }) => {
               </View>
             )}
           </View>
-          <Text style={[Typography.caption, styles.descText]} numberOfLines={1}>
+          <Text style={[Typography.caption, { color: colors.textSecondary }]} numberOfLines={1}>
             {module.description}
           </Text>
         </View>
       </View>
 
-      <ChevronRight size={18} color={Colors.textSecondary} strokeWidth={2} />
+      <ChevronRight size={18} color={colors.textSecondary} strokeWidth={2} />
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.card,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  cardPressed: {
-    borderColor: Colors.secondaryViolet,
-    backgroundColor: Colors.surfaceElevated,
   },
   leftCol: {
     flexDirection: 'row',
@@ -135,7 +134,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   titleText: {
-    color: Colors.textPrimary,
     fontSize: 16,
     lineHeight: 20,
     fontWeight: '600',
@@ -148,9 +146,5 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-  },
-  descText: {
-    color: Colors.textSecondary,
-    fontSize: 12,
   },
 });

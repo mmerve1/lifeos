@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Typography } from '../../theme/typography';
 import { Sizes, Radius, Spacing } from '../../theme/spacing';
 
@@ -32,6 +32,7 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
   textStyle,
   fullWidth = true,
 }) => {
+  const { colors } = useTheme();
   const isInteractive = !disabled && !loading;
 
   return (
@@ -42,22 +43,29 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
       accessibilityState={{ disabled: !isInteractive, busy: loading }}
       style={({ pressed }) => [
         styles.button,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+        },
         fullWidth && styles.fullWidth,
-        pressed && styles.pressed,
+        pressed && {
+          backgroundColor: colors.surfaceElevated,
+          borderColor: colors.secondaryViolet,
+        },
         disabled && styles.disabled,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={Colors.textPrimary} size="small" />
+        <ActivityIndicator color={colors.textPrimary} size="small" />
       ) : (
         <>
           {icon && <>{icon}</>}
           <Text
             style={[
               Typography.button,
-              styles.text,
-              disabled && styles.textDisabled,
+              { color: colors.textPrimary },
+              disabled && { color: colors.textSecondary },
               textStyle,
             ]}
           >
@@ -72,9 +80,7 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     height: Sizes.buttonHeight,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.input,
     flexDirection: 'row',
     alignItems: 'center',
@@ -85,18 +91,7 @@ const styles = StyleSheet.create({
   fullWidth: {
     width: '100%',
   },
-  pressed: {
-    backgroundColor: Colors.surfaceElevated,
-    borderColor: Colors.secondaryViolet,
-  },
   disabled: {
     opacity: 0.5,
-  },
-  text: {
-    color: Colors.textPrimary,
-    fontWeight: '600',
-  },
-  textDisabled: {
-    color: Colors.textSecondary,
   },
 });

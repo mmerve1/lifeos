@@ -9,8 +9,9 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import { Mail } from 'lucide-react-native';
-import { Colors } from '../theme/colors';
+import { Mail, Globe, Sun, Moon } from 'lucide-react-native';
+import { useTheme } from '../theme/ThemeContext';
+import { useI18n } from '../i18n';
 import { Typography } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import { LifeOSLogo } from '../components/common/LifeOSLogo';
@@ -28,6 +29,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onNavigateToRegister,
   onLoginSuccess,
 }) => {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const { t, language, toggleLanguage } = useI18n();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -43,21 +47,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      setEmailError('Email address is required');
+      setEmailError(t('emailRequired'));
       isValid = false;
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(trimmedEmail)) {
-        setEmailError('Please enter a valid email address');
+        setEmailError(t('emailInvalid'));
         isValid = false;
       }
     }
 
     if (!password) {
-      setPasswordError('Password is required');
+      setPasswordError(t('passwordRequired'));
       isValid = false;
     } else if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError(t('passwordMinLength'));
       isValid = false;
     }
 
@@ -78,14 +82,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   const handleForgotPassword = () => {
     Alert.alert(
-      'Reset Password',
-      'Password reset instructions will be sent once the backend email service is connected.'
+      t('forgotPassword'),
+      language === 'tr'
+        ? 'Şifre sıfırlama bağlantısı e-posta servisi bağlandığında iletilecektir.'
+        : 'Password reset instructions will be sent once the backend email service is connected.'
     );
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardContainer}
+      style={[styles.keyboardContainer, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -94,7 +100,42 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {/* Subtle Ambient Violet Glow Header */}
-        <View style={styles.glowCircle} pointerEvents="none" />
+        <View
+          style={[
+            styles.glowCircle,
+            { backgroundColor: isDark ? 'rgba(139, 124, 246, 0.08)' : 'rgba(124, 58, 237, 0.05)' },
+          ]}
+          pointerEvents="none"
+        />
+
+        {/* Top Controls: Language & Theme Switch */}
+        <View style={styles.topControlRow}>
+          <Pressable
+            onPress={toggleLanguage}
+            hitSlop={6}
+            style={[styles.pillButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <Globe size={14} color={colors.textSecondary} />
+            <Text style={[Typography.captionBold, { color: colors.textPrimary }]}>
+              {language.toUpperCase()}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={toggleTheme}
+            hitSlop={6}
+            style={[styles.pillButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            {isDark ? (
+              <Sun size={14} color={colors.warning} />
+            ) : (
+              <Moon size={14} color={colors.primary} />
+            )}
+            <Text style={[Typography.caption, { color: colors.textSecondary }]}>
+              {isDark ? t('lightMode') : t('darkMode')}
+            </Text>
+          </Pressable>
+        </View>
 
         {/* Brand Area */}
         <View style={styles.brandContainer}>
@@ -103,11 +144,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         {/* Welcome Section */}
         <View style={styles.welcomeContainer}>
-          <Text style={[Typography.pageTitle, styles.welcomeTitle]}>
-            Welcome back
+          <Text style={[Typography.pageTitle, styles.welcomeTitle, { color: colors.textPrimary }]}>
+            {t('welcomeBack')}
           </Text>
-          <Text style={[Typography.body, styles.welcomeSubtitle]}>
-            Continue building your LifeOS.
+          <Text style={[Typography.body, { color: colors.textSecondary }]}>
+            {t('continueBuilding')}
           </Text>
         </View>
 
@@ -119,8 +160,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         {/* Form Area */}
         <View style={styles.formContainer}>
           <TextInput
-            label="Email address"
-            placeholder="name@example.com"
+            label={t('emailLabel')}
+            placeholder={t('emailPlaceholder')}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -131,15 +172,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             autoCorrect={false}
             error={emailError}
             leadingIcon={
-              <Mail size={18} color={Colors.textSecondary} strokeWidth={2} />
+              <Mail size={18} color={colors.textSecondary} strokeWidth={2} />
             }
             required
           />
 
           <View style={styles.passwordWrapper}>
             <PasswordInput
-              label="Password"
-              placeholder="Enter your password"
+              label={t('passwordLabel')}
+              placeholder={t('passwordPlaceholder')}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
@@ -153,14 +194,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               hitSlop={8}
               style={styles.forgotPasswordButton}
             >
-              <Text style={[Typography.captionBold, styles.forgotPasswordText]}>
-                Forgot password?
+              <Text style={[Typography.captionBold, { color: colors.secondaryViolet }]}>
+                {t('forgotPassword')}
               </Text>
             </Pressable>
           </View>
 
           <PrimaryButton
-            label="Log in"
+            label={t('logInButton')}
             onPress={handleLogin}
             loading={isLoading}
             disabled={isLoading}
@@ -175,22 +216,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               setEmail('merve@example.com');
               setPassword('LifeOS2026!');
             }}
-            style={styles.demoPill}
+            style={[
+              styles.demoPill,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
           >
-            <Text style={[Typography.caption, styles.demoPillText]}>
-              Tap to fill demo credentials (merve@example.com)
+            <Text style={[Typography.caption, { color: colors.secondaryViolet, fontSize: 11 }]}>
+              {t('demoPill')}
             </Text>
           </Pressable>
         </View>
 
         {/* Footer */}
         <View style={styles.footerContainer}>
-          <Text style={[Typography.body, styles.footerText]}>
-            Don't have an account?{' '}
+          <Text style={[Typography.body, { color: colors.textSecondary }]}>
+            {t('dontHaveAccount')}{' '}
           </Text>
           <Pressable onPress={onNavigateToRegister} hitSlop={8}>
-            <Text style={[Typography.button, styles.signUpLink]}>
-              Sign up
+            <Text style={[Typography.button, { color: colors.primary }]}>
+              {t('signUp')}
             </Text>
           </Pressable>
         </View>
@@ -202,12 +246,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: Spacing.screenPadding,
-    paddingTop: Spacing.xxxl,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.xxxl,
     justifyContent: 'center',
   },
@@ -218,20 +261,31 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: 'rgba(139, 124, 246, 0.08)',
+  },
+  topControlRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  pillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
   },
   brandContainer: {
-    marginBottom: Spacing.xxl,
+    marginBottom: Spacing.xl,
   },
   welcomeContainer: {
     marginBottom: Spacing.xl,
   },
   welcomeTitle: {
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
-  },
-  welcomeSubtitle: {
-    color: Colors.textSecondary,
   },
   formContainer: {
     width: '100%',
@@ -244,9 +298,6 @@ const styles = StyleSheet.create({
     marginTop: -Spacing.sm,
     marginBottom: Spacing.lg,
   },
-  forgotPasswordText: {
-    color: Colors.secondaryViolet,
-  },
   loginButton: {
     marginTop: Spacing.sm,
   },
@@ -258,24 +309,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs + 2,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  demoPillText: {
-    color: Colors.secondaryViolet,
-    fontSize: 11,
   },
   footerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: Spacing.xxl,
-  },
-  footerText: {
-    color: Colors.textSecondary,
-  },
-  signUpLink: {
-    color: Colors.primary,
   },
 });
