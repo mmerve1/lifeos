@@ -13,26 +13,25 @@ import { ScreenType } from './src/types';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { RegisterScreen } from './src/screens/RegisterScreen';
 import { DashboardScreen } from './src/screens/DashboardScreen';
+import { useAuthStore } from './src/store';
 
 function MainApp() {
   const { colors, isDark } = useTheme();
+  const { user, login, register, logout } = useAuthStore();
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('login');
-  const [userName, setUserName] = useState('Merve');
 
   const handleLoginSuccess = (email: string) => {
-    const inferredName = email.split('@')[0];
-    const capitalizedName =
-      inferredName.charAt(0).toUpperCase() + inferredName.slice(1);
-    setUserName(capitalizedName || 'Merve');
+    login(email);
     setCurrentScreen('dashboard');
   };
 
-  const handleRegisterSuccess = (name: string) => {
-    setUserName(name || 'Merve');
+  const handleRegisterSuccess = (name: string, email: string) => {
+    register(name, email);
     setCurrentScreen('dashboard');
   };
 
   const handleLogout = () => {
+    logout();
     setCurrentScreen('login');
   };
 
@@ -58,7 +57,7 @@ function MainApp() {
 
       {currentScreen === 'dashboard' && (
         <DashboardScreen
-          userName={userName}
+          userName={user?.name || 'Merve'}
           onLogout={handleLogout}
         />
       )}
