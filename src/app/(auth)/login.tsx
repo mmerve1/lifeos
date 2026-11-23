@@ -14,6 +14,7 @@ export default function LoginRoute() {
         login(email);
         router.replace('/(app)');
       }}
+      onNavigateToForgotPassword={() => router.push('/(auth)/forgot-password')}
     />
   );
 }

@@ -85,6 +85,34 @@ export const translations = {
     navAI: 'AI',
     navProfile: 'Profile',
 
+    // Forgot Password
+    forgotPasswordTitle: 'Forgot your password?',
+    forgotPasswordSubtitle: 'No worries. Enter the email address associated with your account and we will send you a reset link.',
+    forgotPasswordButton: 'Send reset link',
+    forgotPasswordSuccessTitle: 'Check your inbox',
+    forgotPasswordSuccessDesc: 'We sent a password reset link to',
+    forgotPasswordBackToLogin: 'Back to log in',
+    forgotPasswordNoEmail: 'Did not receive an email?',
+    forgotPasswordResend: 'Resend',
+
+    // Reset Password
+    resetPasswordTitle: 'Create new password',
+    resetPasswordSubtitle: 'Your new password must be different from your previous one.',
+    newPasswordLabel: 'New password',
+    newPasswordPlaceholder: 'Enter new password',
+    confirmNewPasswordLabel: 'Confirm new password',
+    confirmNewPasswordPlaceholder: 'Re-enter new password',
+    resetPasswordButton: 'Update password',
+    resetPasswordSuccess: 'Password updated successfully!',
+    resetPasswordSuccessDesc: 'You can now log in with your new password.',
+    newPasswordRequired: 'New password is required',
+    newPasswordMinLength: 'Password must be at least 8 characters',
+    confirmNewPasswordRequired: 'Please confirm your new password',
+    newPasswordsMismatch: 'Passwords do not match',
+    passwordStrengthWeak: 'Weak',
+    passwordStrengthFair: 'Fair',
+    passwordStrengthStrong: 'Strong',
+
     // Modals & Settings
     settingsTitle: 'Settings & Profile',
     platformVersion: 'Platform Version',
@@ -194,6 +222,34 @@ export const translations = {
     navTasks: 'Görevler',
     navAI: 'AI',
     navProfile: 'Profil',
+
+    // Forgot Password
+    forgotPasswordTitle: 'Şifreni mi unuttun?',
+    forgotPasswordSubtitle: 'Endişelenme. Hesabınla ilişkili e-posta adresini gir, sana sıfırlama bağlantısı gönderelim.',
+    forgotPasswordButton: 'Sıfırlama bağlantısı gönder',
+    forgotPasswordSuccessTitle: 'Gelen kutunu kontrol et',
+    forgotPasswordSuccessDesc: 'Şifre sıfırlama bağlantısı şu adrese gönderildi:',
+    forgotPasswordBackToLogin: 'Girişe dön',
+    forgotPasswordNoEmail: 'E-posta almadın mı?',
+    forgotPasswordResend: 'Tekrar gönder',
+
+    // Reset Password
+    resetPasswordTitle: 'Yeni şifre oluştur',
+    resetPasswordSubtitle: 'Yeni şifren öncekinden farklı olmalıdır.',
+    newPasswordLabel: 'Yeni şifre',
+    newPasswordPlaceholder: 'Yeni şifreni gir',
+    confirmNewPasswordLabel: 'Yeni şifre tekrar',
+    confirmNewPasswordPlaceholder: 'Yeni şifreni tekrar gir',
+    resetPasswordButton: 'Şifreyi güncelle',
+    resetPasswordSuccess: 'Şifre başarıyla güncellendi!',
+    resetPasswordSuccessDesc: 'Artık yeni şifrenle giriş yapabilirsin.',
+    newPasswordRequired: 'Yeni şifre gereklidir',
+    newPasswordMinLength: 'Şifre en az 8 karakter olmalıdır',
+    confirmNewPasswordRequired: 'Lütfen yeni şifrenizi doğrulayın',
+    newPasswordsMismatch: 'Şifreler eşleşmiyor',
+    passwordStrengthWeak: 'Zayıf',
+    passwordStrengthFair: 'Orta',
+    passwordStrengthStrong: 'Güçlü',
 
     // Modals & Settings
     settingsTitle: 'Ayarlar ve Profil',

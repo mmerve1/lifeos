@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Alert,
 } from 'react-native';
 import { Mail, Globe, Sun, Moon } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
@@ -24,11 +23,13 @@ import { createLoginSchema } from '../validation/authSchemas';
 interface LoginScreenProps {
   onNavigateToRegister: () => void;
   onLoginSuccess: (userEmail: string) => void;
+  onNavigateToForgotPassword?: () => void;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   onNavigateToRegister,
   onLoginSuccess,
+  onNavigateToForgotPassword,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
   const { t, language, toggleLanguage } = useI18n();
@@ -76,12 +77,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   const handleForgotPassword = () => {
-    Alert.alert(
-      t('forgotPassword'),
-      language === 'tr'
-        ? 'Şifre sıfırlama bağlantısı e-posta servisi bağlandığında iletilecektir.'
-        : 'Password reset instructions will be sent once the backend email service is connected.'
-    );
+    if (onNavigateToForgotPassword) {
+      onNavigateToForgotPassword();
+    }
   };
 
   return (
