@@ -14,6 +14,7 @@ export default function DashboardRoute() {
         logout();
         router.replace('/(auth)/login');
       }}
+      onNavigateToTasks={() => router.push('/(app)/tasks')}
     />
   );
 }

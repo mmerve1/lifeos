@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,29 +24,57 @@ import { PrimaryButton } from '../components/common/PrimaryButton';
 import { SecondaryButton } from '../components/common/SecondaryButton';
 import {
   mockUser,
-  mockProgress,
-  mockAgendaItems,
   mockModules,
 } from '../data/mockData';
 import { NavTabType, AgendaItemType, StatMetricType, ModuleItemType } from '../types';
+import { useTaskStore } from '../store/useTaskStore';
 
 interface DashboardScreenProps {
   userName?: string;
   onLogout: () => void;
+  onNavigateToTasks?: () => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   userName = 'Merve',
   onLogout,
+  onNavigateToTasks,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
   const { t, language, toggleLanguage } = useI18n();
+  const { tasks, loadTasks, toggleTask, createTask, getStats } = useTaskStore();
 
   const [activeTab, setActiveTab] = useState<NavTabType>('home');
-  const [agenda, setAgenda] = useState<AgendaItemType[]>(mockAgendaItems);
   const [showEmptyAgenda, setShowEmptyAgenda] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [activeModuleModal, setActiveModuleModal] = useState<string | null>(null);
+
+  // Load tasks on mount
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  // Convert tasks to AgendaItemType for existing AgendaItem component
+  const agenda: AgendaItemType[] = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return tasks
+      .filter((task) => task.dueDate === today)
+      .sort((a, b) => (a.dueTime ?? '').localeCompare(b.dueTime ?? ''))
+      .map((task) => ({
+        id: task.id,
+        time: task.dueTime ?? '—',
+        title: task.title,
+        module: task.category.charAt(0).toUpperCase() + task.category.slice(1),
+        category: task.category,
+        completed: task.status === 'completed',
+      }));
+  }, [tasks]);
+
+  // Computed progress from real task data
+  const taskStats = useMemo(() => getStats(), [tasks]);
+  const progressPct = taskStats.total > 0
+    ? Math.round((taskStats.completed / taskStats.total) * 100)
+    : 0;
 
   // Time-aware greeting
   const getGreeting = () => {
@@ -56,23 +84,25 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     return t('goodEvening');
   };
 
-  // Localized stats
+  // Localized stats — connected to real task store
   const localizedStats: StatMetricType[] = useMemo(() => [
     {
       id: 'tasks',
       label: t('tasksCompleted'),
-      value: '5/8',
-      subtitle: t('tasksSubtitle'),
+      value: `${taskStats.completed}/${taskStats.total}`,
+      subtitle: taskStats.total > 0
+        ? `${progressPct}% ${t('tasksDoneRatio')}`
+        : t('tasksSubtitle'),
       icon: 'CheckCircle2',
     },
     {
       id: 'goals',
       label: t('activeGoals'),
-      value: '3',
+      value: String(taskStats.active),
       subtitle: t('goalsSubtitle'),
       icon: 'Target',
     },
-  ], [language]);
+  ], [language, tasks]);
 
   // Localized modules list
   const localizedModules: ModuleItemType[] = useMemo(() => [
@@ -138,11 +168,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   ], [language]);
 
   const handleToggleAgenda = (id: string) => {
-    setAgenda((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, completed: !item.completed } : item
-      )
-    );
+    toggleTask(id);
   };
 
   const handleNotificationPress = () => {
@@ -155,20 +181,26 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   };
 
   const handleModulePress = (moduleId: string) => {
+    if (moduleId === 'personal' && onNavigateToTasks) {
+      onNavigateToTasks();
+      return;
+    }
     const mod = localizedModules.find((m) => m.id === moduleId);
     setActiveModuleModal(mod ? mod.name : moduleId);
   };
 
   const handleAddSampleTask = () => {
-    const newTask: AgendaItemType = {
-      id: Date.now().toString(),
-      time: '18:00',
+    if (onNavigateToTasks) {
+      onNavigateToTasks();
+      return;
+    }
+    createTask({
       title: language === 'tr' ? 'Akşam antrenmanı ve gün sonu değerlendirmesi' : 'Evening workout & reflection',
-      module: language === 'tr' ? 'Sağlık' : 'Health',
+      priority: 'medium',
       category: 'health',
-      completed: false,
-    };
-    setAgenda((prev) => [...prev, newTask]);
+      dueDate: new Date().toISOString().split('T')[0],
+      dueTime: '18:00',
+    });
     setShowEmptyAgenda(false);
   };
 
@@ -199,13 +231,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* Weekly Progress Card */}
         <ProgressCard
-          progress={mockProgress}
+          progress={{
+            percentage: progressPct,
+            message: t('progressMessage'),
+            tasksCompleted: taskStats.completed,
+            tasksTotal: taskStats.total,
+            activeGoals: taskStats.active,
+          }}
           onPress={() => {
             Alert.alert(
               language === 'tr' ? 'Haftalık İlerleme Detayı' : 'Weekly Progress Details',
               language === 'tr'
-                ? `Mevcut İlerleme: %${mockProgress.percentage}\nTamamlanan: ${mockProgress.tasksCompleted}/${mockProgress.tasksTotal}\nAktif Hedef: ${mockProgress.activeGoals}\n\nTamamen gerçek hedef ve görev verilerinizden hesaplanmaktadır.`
-                : `Current Completion: ${mockProgress.percentage}%\nTasks Done: ${mockProgress.tasksCompleted}/${mockProgress.tasksTotal}\nActive Goals: ${mockProgress.activeGoals}\n\nCalculated strictly from defined goals and completed tasks.`
+                ? `Mevcut İlerleme: %${progressPct}\nTamamlanan: ${taskStats.completed}/${taskStats.total}\nAktif Görev: ${taskStats.active}\n\nTamamen gerçek hedef ve görev verilerinizden hesaplanmaktadır.`
+                : `Current Completion: ${progressPct}%\nTasks Done: ${taskStats.completed}/${taskStats.total}\nActive Tasks: ${taskStats.active}\n\nCalculated strictly from defined goals and completed tasks.`
             );
           }}
         />
@@ -245,14 +283,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </Pressable>
 
             <Pressable
-              onPress={() =>
-                Alert.alert(
-                  t('todaysAgenda'),
-                  language === 'tr'
-                    ? 'Bugün için planlanan tüm görev ve etkinliklerin kronolojik listesi.'
-                    : 'Chronological view of all tasks and events scheduled for today.'
-                )
-              }
+              onPress={() => {
+                if (onNavigateToTasks) {
+                  onNavigateToTasks();
+                } else {
+                  Alert.alert(
+                    t('todaysAgenda'),
+                    language === 'tr'
+                      ? 'Bugün için planlanan tüm görev ve etkinliklerin kronolojik listesi.'
+                      : 'Chronological view of all tasks and events scheduled for today.'
+                  );
+                }
+              }}
               hitSlop={8}
             >
               <Text style={[Typography.captionBold, { color: colors.primary }]}>
@@ -450,6 +492,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <BottomNavigation
         activeTab={activeTab}
         onTabChange={(tab) => {
+          if (tab === 'tasks' && onNavigateToTasks) {
+            onNavigateToTasks();
+            return;
+          }
           setActiveTab(tab);
           if (tab !== 'home') {
             Alert.alert(
