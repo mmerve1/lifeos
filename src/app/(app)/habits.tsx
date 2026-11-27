@@ -14,6 +14,7 @@ export default function HabitsRoute() {
       onNavigateToHome={() => router.replace('/(app)')}
       onNavigateToTasks={() => router.replace('/(app)/tasks')}
       onNavigateToCalendar={() => router.replace('/(app)/calendar')}
+      onNavigateToMentor={() => router.replace('/(app)/mentor')}
       onLogout={async () => {
         clearTasks();
         await logout();

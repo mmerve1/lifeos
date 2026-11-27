@@ -14,6 +14,7 @@ export default function CalendarRoute() {
       onNavigateToHome={() => router.replace('/(app)')}
       onNavigateToTasks={() => router.replace('/(app)/tasks')}
       onNavigateToHabits={() => router.replace('/(app)/habits')}
+      onNavigateToMentor={() => router.replace('/(app)/mentor')}
       onNavigateToEditTask={(id) => router.push({ pathname: '/(app)/tasks/[id]', params: { id } })}
       onLogout={async () => {
         clearTasks();

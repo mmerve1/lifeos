@@ -39,6 +39,7 @@ interface DashboardScreenProps {
   onNavigateToNewTask?: () => void;
   onNavigateToCalendar?: () => void;
   onNavigateToHabits?: () => void;
+  onNavigateToMentor?: () => void;
   onNavigateToOnboarding?: () => void;
 }
 
@@ -49,6 +50,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigateToNewTask,
   onNavigateToCalendar,
   onNavigateToHabits,
+  onNavigateToMentor,
   onNavigateToOnboarding,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
@@ -224,6 +226,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       onNavigateToHabits();
       return;
     }
+    if (moduleId === 'ai' && onNavigateToMentor) {
+      onNavigateToMentor();
+      return;
+    }
     const mod = localizedModules.find((m) => m.id === moduleId);
     setActiveModuleModal(mod ? mod.name : moduleId);
   };
@@ -271,6 +277,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             }
             if (tab === 'habits' && onNavigateToHabits) {
               onNavigateToHabits();
+              return;
+            }
+            if (tab === 'ai' && onNavigateToMentor) {
+              onNavigateToMentor();
               return;
             }
             if (tab === 'profile') {
@@ -500,6 +510,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               }
               if (tab === 'calendar' && onNavigateToCalendar) {
                 onNavigateToCalendar();
+                return;
+              }
+              if (tab === 'ai' && onNavigateToMentor) {
+                onNavigateToMentor();
                 return;
               }
               if (tab === 'profile') {

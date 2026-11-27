@@ -18,6 +18,10 @@ public class LifeOSDbContext : IdentityDbContext<ApplicationUser, IdentityRole<G
     public DbSet<HabitLog> HabitLogs => Set<HabitLog>();
     public DbSet<GoalItem> Goals => Set<GoalItem>();
     public DbSet<UserLifeProfile> UserLifeProfiles => Set<UserLifeProfile>();
+    public DbSet<AiConversation> AiConversations => Set<AiConversation>();
+    public DbSet<AiMessage> AiMessages => Set<AiMessage>();
+    public DbSet<AiMemory> AiMemories => Set<AiMemory>();
+    public DbSet<AiUserPreference> AiUserPreferences => Set<AiUserPreference>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -109,6 +113,57 @@ public class LifeOSDbContext : IdentityDbContext<ApplicationUser, IdentityRole<G
 
             entity.HasIndex(p => p.UserId).IsUnique();
 
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AiConversation>(entity =>
+        {
+            entity.ToTable("ai_conversations");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Title).HasMaxLength(200).IsRequired();
+            entity.HasIndex(c => c.UserId);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AiMessage>(entity =>
+        {
+            entity.ToTable("ai_messages");
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Role).HasMaxLength(20).IsRequired();
+            entity.Property(m => m.Content).HasMaxLength(4000).IsRequired();
+            entity.Property(m => m.ProposedActionJson).HasMaxLength(2000);
+            entity.Property(m => m.ActionStatus).HasMaxLength(20);
+            entity.HasIndex(m => m.ConversationId);
+            entity.HasOne(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AiMemory>(entity =>
+        {
+            entity.ToTable("ai_memories");
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Content).HasMaxLength(500).IsRequired();
+            entity.Property(m => m.Category).HasMaxLength(40).IsRequired();
+            entity.HasIndex(m => m.UserId);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AiUserPreference>(entity =>
+        {
+            entity.ToTable("ai_user_preferences");
+            entity.HasKey(p => p.Id);
+            entity.HasIndex(p => p.UserId).IsUnique();
             entity.HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(p => p.UserId)

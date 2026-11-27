@@ -1,10 +1,12 @@
 using LifeOS.Application.Auth.Interfaces;
 using LifeOS.Application.Habits.Interfaces;
+using LifeOS.Application.Mentor.Interfaces;
 using LifeOS.Application.Profile.Interfaces;
 using LifeOS.Application.Tasks.Interfaces;
 using LifeOS.Infrastructure.Auth;
 using LifeOS.Infrastructure.Habits;
 using LifeOS.Infrastructure.Identity;
+using LifeOS.Infrastructure.Mentor;
 using LifeOS.Infrastructure.Persistence;
 using LifeOS.Infrastructure.Profile;
 using LifeOS.Infrastructure.Tasks;
@@ -46,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<ITaskService, TaskService>();
         services.AddScoped<IHabitGoalService, HabitGoalService>();
         services.AddScoped<ILifeProfileService, LifeProfileService>();
+        services.AddSingleton<IAIProvider, SmartRuleBasedAIProvider>();
+        services.AddScoped<IAIMentorService, AIMentorService>();
 
         return services;
     }
