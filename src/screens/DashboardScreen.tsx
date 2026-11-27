@@ -64,6 +64,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [activeTab, setActiveTab] = useState<NavTabType>('home');
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [activeModuleModal, setActiveModuleModal] = useState<string | null>(null);
+  const [showAllSpaces, setShowAllSpaces] = useState(false);
 
   // Pulsing ping dot animation
   const pingScale = useRef(new Animated.Value(1)).current;
@@ -145,7 +146,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       : `${remainingCount} tasks left today.`;
   }, [language, remainingCount, taskStats.total]);
 
-  const localizedModules: ModuleItemType[] = useMemo(() => {
+  const activeCountByCategory = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const task of tasks) {
+      if (task.status !== 'completed') {
+        counts[task.category] = (counts[task.category] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [tasks]);
+
+  const { focusedModules, otherModules } = useMemo(() => {
+    const activeBadge = (cat: string) => {
+      const count = activeCountByCategory[cat] || 0;
+      if (count <= 0) return undefined;
+      return language === 'tr' ? `${count} aktif` : `${count} active`;
+    };
+
     const base: ModuleItemType[] = [
       {
         id: 'career',
@@ -153,7 +170,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('moduleCareerDesc'),
         category: 'career',
         iconName: 'Briefcase',
-        badge: language === 'tr' ? '1 aktif' : '1 active',
+        badge: activeBadge('career'),
       },
       {
         id: 'academic',
@@ -161,6 +178,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('moduleAcademicDesc'),
         category: 'academic',
         iconName: 'GraduationCap',
+        badge: activeBadge('academic'),
       },
       {
         id: 'finance',
@@ -168,6 +186,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('moduleFinanceDesc'),
         category: 'finance',
         iconName: 'Wallet',
+        badge: activeBadge('finance'),
       },
       {
         id: 'health',
@@ -175,7 +194,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('moduleHealthDesc'),
         category: 'health',
         iconName: 'HeartPulse',
-        badge: language === 'tr' ? 'Seri: 6 gün' : 'Streak: 6d',
+        badge: activeBadge('health'),
       },
       {
         id: 'learning',
@@ -183,6 +202,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('moduleLearningDesc'),
         category: 'learning',
         iconName: 'BookOpen',
+        badge: activeBadge('learning'),
       },
       {
         id: 'social',
@@ -190,6 +210,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('moduleSocialDesc'),
         category: 'social',
         iconName: 'Users',
+        badge: activeBadge('social'),
       },
       {
         id: 'personal',
@@ -197,6 +218,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('modulePersonalDesc'),
         category: 'personal',
         iconName: 'Compass',
+        badge: activeBadge('personal'),
       },
       {
         id: 'ai',
@@ -204,20 +226,38 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         description: t('moduleAIDesc'),
         category: 'ai',
         iconName: 'Sparkles',
-        badge: 'Beta',
+        badge: language === 'tr' ? 'Aktif' : 'Live',
       },
     ];
 
-    if (!profile?.focusAreas?.length) return base;
+    if (!profile?.focusAreas?.length) {
+      return { focusedModules: base, otherModules: [] as ModuleItemType[] };
+    }
+
     const focusSet = new Set(profile.focusAreas);
-    return base
+    const focused = base
+      .filter((m) => focusSet.has(m.category) || m.category === 'ai')
       .map((m) =>
         focusSet.has(m.category)
-          ? { ...m, badge: language === 'tr' ? 'Öncelikli' : 'Priority' }
+          ? {
+              ...m,
+              badge: m.badge
+                ? `${language === 'tr' ? 'Öncelikli' : 'Focus'} · ${m.badge}`
+                : language === 'tr'
+                ? 'Öncelikli'
+                : 'Focus',
+            }
           : m
-      )
-      .sort((a, b) => (focusSet.has(b.category) ? 1 : 0) - (focusSet.has(a.category) ? 1 : 0));
-  }, [language, t, profile]);
+      );
+    const others = base.filter((m) => !focusSet.has(m.category) && m.category !== 'ai');
+
+    return { focusedModules: focused, otherModules: others };
+  }, [language, t, profile, activeCountByCategory]);
+
+  const localizedModules = useMemo(
+    () => (showAllSpaces ? [...focusedModules, ...otherModules] : focusedModules),
+    [showAllSpaces, focusedModules, otherModules]
+  );
 
   const handleModulePress = (moduleId: string) => {
     if (moduleId === 'personal' && onNavigateToTasks) {
@@ -481,13 +521,59 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
           {/* Your Spaces (Modules) Section */}
           <FadeRiseView delay={300}>
-            <View style={styles.sectionHeader}>
-              <Text style={[Typography.sectionTitle, { color: colors.textPrimary }]}>
-                {t('yourSpaces')}
-              </Text>
-              <Text style={[Typography.caption, { color: colors.textSecondary }]}>
-                {t('spacesSubtitle')}
-              </Text>
+            <View style={[styles.sectionHeader, styles.spacesHeaderRow]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[Typography.sectionTitle, { color: colors.textPrimary }]}>
+                  {profile?.focusAreas?.length
+                    ? language === 'tr'
+                      ? 'Seçtiğin Yaşam Alanları'
+                      : 'Your Focus Spaces'
+                    : t('yourSpaces')}
+                </Text>
+                <Text style={[Typography.caption, { color: colors.textSecondary }]}>
+                  {profile?.focusAreas?.length
+                    ? language === 'tr'
+                      ? 'Profilinde seçtiğin öncelikli alanlara göre kişiselleştirildi'
+                      : 'Personalized to the priority areas in your profile'
+                    : t('spacesSubtitle')}
+                </Text>
+              </View>
+
+              <View style={styles.spacesActions}>
+                {otherModules.length > 0 && (
+                  <Pressable
+                    onPress={() => setShowAllSpaces((prev) => !prev)}
+                    style={[
+                      styles.spacesPillBtn,
+                      { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+                    ]}
+                  >
+                    <Text style={[Typography.captionBold, { color: colors.textPrimary, fontSize: 12 }]}>
+                      {showAllSpaces
+                        ? language === 'tr'
+                          ? 'Sadece seçtiklerim'
+                          : 'Focus only'
+                        : language === 'tr'
+                        ? `Diğer alanlar (+${otherModules.length})`
+                        : `Other spaces (+${otherModules.length})`}
+                    </Text>
+                  </Pressable>
+                )}
+
+                {onNavigateToProfile && (
+                  <Pressable
+                    onPress={onNavigateToProfile}
+                    style={[
+                      styles.spacesPillBtn,
+                      { backgroundColor: colors.surface, borderColor: colors.primary },
+                    ]}
+                  >
+                    <Text style={[Typography.captionBold, { color: colors.primary, fontSize: 12 }]}>
+                      {language === 'tr' ? 'Alanları düzenle' : 'Edit spaces'}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
 
             <View style={isWideScreen ? styles.modulesGridWide : undefined}>
@@ -895,5 +981,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     marginBottom: Spacing.md,
+  },
+  spacesHeaderRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+  },
+  spacesActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  spacesPillBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
   },
 });
