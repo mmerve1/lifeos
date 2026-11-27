@@ -59,7 +59,7 @@ export const WebSidebar: React.FC<WebSidebarProps> = ({
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderRightColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: colors.sidebar, borderRightColor: colors.border }]}>
       {/* Brand Logo */}
       <View style={styles.brandSection}>
         <LifeOSLogo size="sm" />
@@ -67,12 +67,9 @@ export const WebSidebar: React.FC<WebSidebarProps> = ({
 
       {/* Navigation Items */}
       <View style={styles.navSection}>
-        <Text style={[Typography.captionBold, styles.navCategoryTitle, { color: colors.textSecondary }]}>
-          {language === 'tr' ? 'MENÜ' : 'MENU'}
-        </Text>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
-          const color = isActive ? colors.primary : colors.textSecondary;
+          const color = isActive ? colors.primaryText : colors.textSecondary;
           return (
             <Pressable
               key={tab.key}
@@ -80,10 +77,9 @@ export const WebSidebar: React.FC<WebSidebarProps> = ({
               style={({ pressed }) => [
                 styles.navItem,
                 isActive && {
-                  backgroundColor: `${colors.primary}18`,
-                  borderColor: `${colors.primary}44`,
+                  backgroundColor: colors.primary,
                 },
-                pressed && { opacity: 0.8 },
+                pressed && { opacity: 0.85 },
               ]}
             >
               <View style={styles.navItemIcon}>{tab.renderIcon(color)}</View>
@@ -91,18 +87,17 @@ export const WebSidebar: React.FC<WebSidebarProps> = ({
                 style={[
                   Typography.body,
                   styles.navItemText,
-                  { color, fontWeight: isActive ? '600' : '500' },
+                  { color, fontWeight: isActive ? '700' : '500' },
                 ]}
               >
                 {t(tab.labelKey)}
               </Text>
-              {isActive && <View style={[styles.activeIndicator, { backgroundColor: colors.primary }]} />}
             </Pressable>
           );
         })}
       </View>
 
-      {/* Footer Controls (Theme, Language, User, Logout) */}
+      {/* Footer Controls */}
       <View style={[styles.footerSection, { borderTopColor: colors.border }]}>
         <View style={styles.toggleRow}>
           <Pressable
@@ -121,17 +116,16 @@ export const WebSidebar: React.FC<WebSidebarProps> = ({
             style={[styles.smallPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
             hitSlop={6}
           >
-            {isDark ? <Sun size={14} color="#FBBF24" /> : <Moon size={14} color={colors.primary} />}
+            {isDark ? <Sun size={14} color="#FFB454" /> : <Moon size={14} color={colors.primary} />}
             <Text style={[Typography.captionBold, { color: colors.textPrimary, fontSize: 11 }]}>
               {isDark ? (language === 'tr' ? 'Açık' : 'Light') : (language === 'tr' ? 'Koyu' : 'Dark')}
             </Text>
           </Pressable>
         </View>
 
-        {/* User Card */}
         <View style={[styles.userCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
           <View style={[styles.avatarCircle, { backgroundColor: colors.primary }]}>
-            <Text style={[Typography.bodyBold, { color: '#FFFFFF', fontSize: 13 }]}>
+            <Text style={[Typography.bodyBold, { color: colors.primaryText, fontSize: 13 }]}>
               {userName.charAt(0).toUpperCase()}
             </Text>
           </View>
@@ -140,7 +134,7 @@ export const WebSidebar: React.FC<WebSidebarProps> = ({
               {userName}
             </Text>
             <Text style={[Typography.caption, { color: colors.textSecondary, fontSize: 11 }]} numberOfLines={1}>
-              LifeOS Free
+              LifeOS
             </Text>
           </View>
           {onLogout && (
@@ -159,48 +153,31 @@ const styles = StyleSheet.create({
     width: 240,
     height: '100%',
     borderRightWidth: 1,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.md,
+    paddingVertical: 28,
+    paddingHorizontal: 18,
     justifyContent: 'space-between',
   },
   brandSection: {
-    paddingHorizontal: Spacing.sm,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal: 10,
+    paddingBottom: 24,
   },
   navSection: {
     flex: 1,
-    gap: 4,
-  },
-  navCategoryTitle: {
-    fontSize: 10,
-    letterSpacing: 1,
-    paddingHorizontal: Spacing.sm,
-    marginBottom: Spacing.xs,
+    gap: 6,
   },
   navItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    position: 'relative',
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 14,
   },
   navItemIcon: {
-    marginRight: Spacing.md,
+    marginRight: 12,
   },
   navItemText: {
-    fontSize: 14,
+    fontSize: 15,
     flex: 1,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    right: 0,
-    top: 8,
-    bottom: 8,
-    width: 3,
-    borderRadius: 2,
   },
   footerSection: {
     borderTopWidth: 1,
@@ -218,7 +195,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: Radius.pill,
     borderWidth: 1,
   },
@@ -226,7 +203,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.sm,
-    borderRadius: Radius.card,
+    borderRadius: 16,
     borderWidth: 1,
     gap: Spacing.sm,
   },

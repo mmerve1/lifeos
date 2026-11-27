@@ -1,10 +1,15 @@
 export interface ThemeColors {
   background: string;
+  sidebar: string;
   surface: string;
   surfaceElevated: string;
   primary: string;
   primaryPressed: string;
+  primaryText: string;
   secondaryViolet: string;
+  accentLight: string;
+  accentLightText: string;
+  accentLightSubtext: string;
   success: string;
   warning: string;
   danger: string;
@@ -28,62 +33,71 @@ export interface ThemeColors {
 }
 
 export const darkColors: ThemeColors = {
-  background: '#11121C',
-  surface: '#1B1C2B',
-  surfaceElevated: '#24253A',
-  primary: '#8B7CF6',
-  primaryPressed: '#7969E8',
-  secondaryViolet: '#B6ABFF',
-  success: '#51D4B5',
-  warning: '#F3B86C',
-  danger: '#F07891',
-  textPrimary: '#F5F5FA',
-  textSecondary: '#A4A5B8',
-  border: '#303146',
-  borderFocused: '#8B7CF6',
-  borderError: '#F07891',
-  surfaceSubtle: 'rgba(139, 124, 246, 0.08)',
-  overlay: 'rgba(17, 18, 28, 0.85)',
+  background: '#0E1029',
+  sidebar: '#14173A',
+  surface: '#181B42',
+  surfaceElevated: '#21255A',
+  primary: '#8FA2FF',
+  primaryPressed: '#7A8FF5',
+  primaryText: '#0E1029',
+  secondaryViolet: '#C9A6FF',
+  accentLight: '#E7E9FF',
+  accentLightText: '#14173A',
+  accentLightSubtext: '#3E426E',
+  success: '#7BE3A1',
+  warning: '#FFB454',
+  danger: '#FF8FA3',
+  textPrimary: '#F3F2FF',
+  textSecondary: '#B9BCE0',
+  border: '#30356E',
+  borderFocused: '#8FA2FF',
+  borderError: '#FF8FA3',
+  surfaceSubtle: 'rgba(143, 162, 255, 0.12)',
+  overlay: 'rgba(14, 16, 41, 0.85)',
   modules: {
-    career: '#818CF8',
-    academic: '#60A5FA',
-    finance: '#34D399',
-    health: '#F472B6',
-    learning: '#FBBF24',
-    social: '#A78BFA',
-    personal: '#38BDF8',
-    ai: '#C084FC',
+    career: '#FFB454',
+    academic: '#5FD6E8',
+    finance: '#7BE3A1',
+    health: '#FF8FA3',
+    learning: '#C9A6FF',
+    social: '#F5E06B',
+    personal: '#8FA2FF',
+    ai: '#E7E9FF',
   },
 };
 
 export const lightColors: ThemeColors = {
-  background: '#F8F9FD',
+  background: '#F5F6FF',
+  sidebar: '#FFFFFF',
   surface: '#FFFFFF',
-  surfaceElevated: '#F1F3F9',
-  primary: '#7C3AED',
-  primaryPressed: '#6D28D9',
-  secondaryViolet: '#8B7CF6',
-  success: '#0D9488',
+  surfaceElevated: '#EEF0FF',
+  primary: '#4E62E8',
+  primaryPressed: '#3F52D6',
+  primaryText: '#FFFFFF',
+  secondaryViolet: '#7C5CE6',
+  accentLight: '#14173A',
+  accentLightText: '#F3F2FF',
+  accentLightSubtext: '#B9BCE0',
+  success: '#16A34A',
   warning: '#D97706',
   danger: '#E11D48',
-  textPrimary: '#0F172A',
-  textSecondary: '#64748B',
-  border: '#E2E8F0',
-  borderFocused: '#7C3AED',
+  textPrimary: '#0E1029',
+  textSecondary: '#545880',
+  border: '#D8DCF5',
+  borderFocused: '#4E62E8',
   borderError: '#E11D48',
-  surfaceSubtle: 'rgba(124, 58, 237, 0.06)',
-  overlay: 'rgba(15, 23, 42, 0.6)',
+  surfaceSubtle: 'rgba(78, 98, 232, 0.08)',
+  overlay: 'rgba(14, 16, 41, 0.55)',
   modules: {
-    career: '#6366F1',
-    academic: '#3B82F6',
+    career: '#F59E0B',
+    academic: '#06B6D4',
     finance: '#10B981',
-    health: '#EC4899',
-    learning: '#F59E0B',
-    social: '#8B5CF6',
-    personal: '#0EA5E9',
-    ai: '#A855F7',
+    health: '#F43F5E',
+    learning: '#8B5CF6',
+    social: '#CA8A04',
+    personal: '#4E62E8',
+    ai: '#6366F1',
   },
 };
 
-// Default export alias for backwards-compatibility
 export const Colors = darkColors;

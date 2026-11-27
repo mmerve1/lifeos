@@ -1,126 +1,156 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Home, Calendar, CheckSquare, Sparkles, User } from 'lucide-react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated, Easing, Platform } from 'react-native';
+import { Home, Calendar, CheckSquare, Plus, User } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
-import { useI18n, TranslationKey } from '../../i18n';
+import { useI18n } from '../../i18n';
 import { Typography } from '../../theme/typography';
-import { Spacing } from '../../theme/spacing';
+import { Spacing, Radius } from '../../theme/spacing';
 import { NavTabType } from '../../types';
 
 interface BottomNavigationProps {
   activeTab: NavTabType;
   onTabChange: (tab: NavTabType) => void;
-}
-
-interface TabItemConfig {
-  key: NavTabType;
-  labelKey: TranslationKey;
-  renderIcon: (color: string, focused: boolean) => React.ReactNode;
+  onQuickAdd?: () => void;
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeTab,
   onTabChange,
+  onQuickAdd,
 }) => {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const breatheAnim = useRef(new Animated.Value(1)).current;
 
-  const tabs: TabItemConfig[] = [
-    {
-      key: 'home',
-      labelKey: 'navHome',
-      renderIcon: (color) => <Home size={20} color={color} strokeWidth={2} />,
-    },
-    {
-      key: 'calendar',
-      labelKey: 'navCalendar',
-      renderIcon: (color) => <Calendar size={20} color={color} strokeWidth={2} />,
-    },
-    {
-      key: 'tasks',
-      labelKey: 'navTasks',
-      renderIcon: (color) => <CheckSquare size={20} color={color} strokeWidth={2} />,
-    },
-    {
-      key: 'ai',
-      labelKey: 'navAI',
-      renderIcon: (color) => <Sparkles size={20} color={color} strokeWidth={2} />,
-    },
-    {
-      key: 'profile',
-      labelKey: 'navProfile',
-      renderIcon: (color) => <User size={20} color={color} strokeWidth={2} />,
-    },
-  ];
+  useEffect(() => {
+    const useNativeDriver = Platform.OS !== 'web';
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breatheAnim, {
+          toValue: 1.07,
+          duration: 1400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver,
+        }),
+        Animated.timing(breatheAnim, {
+          toValue: 1,
+          duration: 1400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [breatheAnim]);
+
+  const renderTab = (
+    key: NavTabType,
+    label: string,
+    icon: (color: string) => React.ReactNode
+  ) => {
+    const isActive = activeTab === key;
+    const color = isActive ? colors.primary : colors.textSecondary;
+    return (
+      <Pressable
+        key={key}
+        onPress={() => onTabChange(key)}
+        hitSlop={6}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: isActive }}
+        style={styles.tabButton}
+      >
+        {icon(color)}
+        <Text
+          style={[
+            Typography.caption,
+            styles.tabLabel,
+            { color, fontWeight: isActive ? '700' : '500' },
+          ]}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    );
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-      <View style={styles.navBar}>
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const color = isActive ? colors.primary : colors.textSecondary;
+    <View style={[styles.outerWrap, { backgroundColor: 'transparent' }]}>
+      <View
+        style={[
+          styles.floatingPill,
+          {
+            backgroundColor: colors.surfaceElevated,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        {renderTab('home', t('navHome'), (c) => <Home size={19} color={c} />)}
+        {renderTab('tasks', t('navTasks'), (c) => <CheckSquare size={19} color={c} />)}
 
-          return (
-            <Pressable
-              key={tab.key}
-              onPress={() => onTabChange(tab.key)}
-              hitSlop={6}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isActive }}
-              style={styles.tabButton}
-            >
-              <View
-                style={[
-                  styles.iconWrapper,
-                  isActive && { backgroundColor: `${colors.primary}1F` },
-                ]}
-              >
-                {tab.renderIcon(color, isActive)}
-              </View>
-              <Text
-                style={[
-                  Typography.caption,
-                  styles.tabLabel,
-                  { color, fontWeight: isActive ? '600' : '400' },
-                ]}
-              >
-                {t(tab.labelKey)}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {/* Center breathing + Quick Capture button */}
+        <Animated.View style={{ transform: [{ scale: breatheAnim }] }}>
+          <Pressable
+            onPress={() => (onQuickAdd ? onQuickAdd() : onTabChange('tasks'))}
+            style={({ pressed }) => [
+              styles.centerFab,
+              {
+                backgroundColor: colors.primary,
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
+            accessibilityLabel="Quick add task"
+          >
+            <Plus size={26} color={colors.primaryText} strokeWidth={2.5} />
+          </Pressable>
+        </Animated.View>
+
+        {renderTab('calendar', t('navCalendar'), (c) => <Calendar size={19} color={c} />)}
+        {renderTab('profile', t('navProfile'), (c) => <User size={19} color={c} />)}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    borderTopWidth: 1,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
+  outerWrap: {
+    paddingHorizontal: 14,
+    paddingBottom: Spacing.md,
+    paddingTop: 6,
   },
-  navBar: {
+  floatingPill: {
+    height: 68,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
+    justifyContent: 'space-around',
+    paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
   },
   tabButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 2,
-    minWidth: 54,
-  },
-  iconWrapper: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
+    minWidth: 52,
+    gap: 2,
   },
   tabLabel: {
-    fontSize: 11,
-    marginTop: 2,
+    fontSize: 10,
+  },
+  centerFab: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#8FA2FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
