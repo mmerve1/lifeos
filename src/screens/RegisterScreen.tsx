@@ -1,24 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
+  TextInput as RNTextInput,
   StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { User, Mail, Check, Globe, Sun, Moon } from 'lucide-react-native';
-import { useTheme } from '../theme/ThemeContext';
+import { Check } from 'lucide-react-native';
 import { useI18n } from '../i18n';
-import { Typography } from '../theme/typography';
-import { Spacing, Radius } from '../theme/spacing';
-import { LifeOSLogo } from '../components/common/LifeOSLogo';
-import { TextInput } from '../components/common/TextInput';
-import { PasswordInput } from '../components/common/PasswordInput';
-import { PrimaryButton } from '../components/common/PrimaryButton';
-import { InlineFeedback } from '../components/common/InlineFeedback';
+import { AuthShell } from '../components/auth/AuthShell';
+import { PortalTransition } from '../components/auth/PortalTransition';
 import { createRegisterSchema } from '../validation/authSchemas';
 
 interface RegisterScreenProps {
@@ -30,30 +22,43 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onNavigateToLogin,
   onRegisterSuccess,
 }) => {
-  const { colors, isDark, toggleTheme } = useTheme();
-  const { t, language, toggleLanguage } = useI18n();
+  const { t, language } = useI18n();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-  const [fullNameError, setFullNameError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
-  const [consentError, setConsentError] = useState<string | null>(null);
-
+  const [error, setError] = useState<string | null>(null);
+  const [shakeCount, setShakeCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showPortal, setShowPortal] = useState(false);
 
-  const validate = () => {
-    setFullNameError(null);
-    setEmailError(null);
-    setPasswordError(null);
-    setConfirmPasswordError(null);
-    setConsentError(null);
+  const strengthScore = useMemo(() => {
+    if (!password) return 0;
+    return [
+      password.length >= 8,
+      /\d/.test(password),
+      /[^A-Za-z0-9]/.test(password) || (/[a-z]/.test(password) && /[A-Z]/.test(password)),
+    ].filter(Boolean).length;
+  }, [password]);
+
+  const strengthColor = ['#A3123A', '#A3123A', '#B86E00', '#14773F'][strengthScore];
+  const strengthWidth: `${number}%` = password ? `${Math.max(strengthScore, 1) * 33.3}%` : '0%';
+  const strengthLabel = !password
+    ? language === 'tr'
+      ? 'Parola gücü'
+      : 'Password strength'
+    : [
+        t('passwordStrengthWeak'),
+        t('passwordStrengthWeak'),
+        t('passwordStrengthFair'),
+        t('passwordStrengthStrong'),
+      ][strengthScore];
+
+  const handleRegister = () => {
+    if (isLoading) return;
+    setError(null);
 
     const schema = createRegisterSchema(t);
     const result = schema.safeParse({
@@ -65,351 +70,257 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     });
 
     if (!result.success) {
-      result.error.issues.forEach((issue) => {
-        const field = issue.path[0];
-        if (field === 'fullName' && !fullNameError) {
-          setFullNameError(issue.message);
-        } else if (field === 'email' && !emailError) {
-          setEmailError(issue.message);
-        } else if (field === 'password' && !passwordError) {
-          setPasswordError(issue.message);
-        } else if (field === 'confirmPassword' && !confirmPasswordError) {
-          setConfirmPasswordError(issue.message);
-        } else if (field === 'agreedToTerms' && !consentError) {
-          setConsentError(issue.message);
-        }
-      });
-      return false;
+      setError(result.error.issues[0]?.message ?? t('emailInvalid'));
+      setShakeCount((c) => c + 1);
+      return;
     }
 
-    return true;
-  };
-
-  const handleRegister = () => {
-    if (!validate()) return;
-
     setIsLoading(true);
-
     setTimeout(() => {
       setIsLoading(false);
-      setSuccessMessage(t('registerSuccess'));
-      setTimeout(() => {
-        onRegisterSuccess(fullName.trim(), email.trim());
-      }, 800);
-    }, 700);
-  };
-
-  const showDocumentInfo = (title: string) => {
-    Alert.alert(
-      title,
-      `LifeOS ${title} will be accessible here in production once document hosting is configured.`
-    );
+      setShowPortal(true);
+    }, 650);
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.keyboardContainer, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Ambient Glow */}
-        <View
-          style={[
-            styles.glowCircle,
-            { backgroundColor: isDark ? 'rgba(139, 124, 246, 0.08)' : 'rgba(124, 58, 237, 0.05)' },
-          ]}
-          pointerEvents="none"
-        />
+    <View style={styles.root}>
+      <AuthShell shakeTrigger={shakeCount}>
+        <View style={styles.formStack}>
+          <Text style={styles.heading}>{t('createAccount')}</Text>
 
-        {/* Top Controls: Language & Theme Switch */}
-        <View style={styles.topControlRow}>
-          <Pressable
-            onPress={toggleLanguage}
-            hitSlop={6}
-            style={[styles.pillButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <Globe size={14} color={colors.textSecondary} />
-            <Text style={[Typography.captionBold, { color: colors.textPrimary }]}>
-              {language.toUpperCase()}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={toggleTheme}
-            hitSlop={6}
-            style={[styles.pillButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            {isDark ? (
-              <Sun size={14} color={colors.warning} />
-            ) : (
-              <Moon size={14} color={colors.primary} />
-            )}
-            <Text style={[Typography.caption, { color: colors.textSecondary }]}>
-              {isDark ? t('lightMode') : t('darkMode')}
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Header */}
-        <View style={styles.brandContainer}>
-          <LifeOSLogo size="md" showSlogan={false} />
-        </View>
-
-        <View style={styles.titleContainer}>
-          <Text style={[Typography.pageTitle, styles.pageTitle, { color: colors.textPrimary }]}>
-            {t('createAccount')}
-          </Text>
-          <Text style={[Typography.body, { color: colors.textSecondary }]}>
-            {t('registerSubtitle')}
-          </Text>
-        </View>
-
-        {successMessage && (
-          <InlineFeedback
-            type="success"
-            title={language === 'tr' ? 'Başarılı' : 'Success'}
-            message={successMessage}
-          />
-        )}
-
-        {/* Form Fields */}
-        <View style={styles.formContainer}>
-          <TextInput
-            label={t('fullNameLabel')}
+          <Text style={styles.label}>{t('fullNameLabel')}</Text>
+          <RNTextInput
+            style={styles.input}
             placeholder={t('fullNamePlaceholder')}
+            placeholderTextColor="#6A6FA8"
             value={fullName}
-            onChangeText={(text) => {
-              setFullName(text);
-              if (fullNameError) setFullNameError(null);
+            onChangeText={(v) => {
+              setFullName(v);
+              if (error) setError(null);
             }}
-            error={fullNameError}
-            leadingIcon={
-              <User size={18} color={colors.textSecondary} strokeWidth={2} />
-            }
-            required
           />
 
-          <TextInput
-            label={t('emailLabel')}
+          <Text style={styles.label}>{t('emailLabel')}</Text>
+          <RNTextInput
+            style={styles.input}
             placeholder={t('emailPlaceholder')}
+            placeholderTextColor="#6A6FA8"
             value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (emailError) setEmailError(null);
+            onChangeText={(v) => {
+              setEmail(v);
+              if (error) setError(null);
             }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            error={emailError}
-            leadingIcon={
-              <Mail size={18} color={colors.textSecondary} strokeWidth={2} />
-            }
-            required
           />
 
-          <PasswordInput
-            label={t('passwordLabel')}
+          <Text style={styles.label}>
+            {t('passwordLabel')} ({t('passwordRuleHint')})
+          </Text>
+          <RNTextInput
+            style={styles.input}
             placeholder={t('passwordPlaceholder')}
+            placeholderTextColor="#6A6FA8"
             value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (passwordError) setPasswordError(null);
+            onChangeText={(v) => {
+              setPassword(v);
+              if (error) setError(null);
             }}
-            helperText={t('passwordRuleHint')}
-            error={passwordError}
-            required
+            secureTextEntry
+            autoCapitalize="none"
           />
 
-          <PasswordInput
-            label={t('confirmPasswordLabel')}
+          {/* Password strength bar */}
+          <View style={styles.strengthTrack}>
+            <View
+              style={[
+                styles.strengthFill,
+                { width: strengthWidth, backgroundColor: strengthColor },
+              ]}
+            />
+          </View>
+          <Text style={styles.strengthText}>{strengthLabel}</Text>
+
+          <Text style={styles.label}>{t('confirmPasswordLabel')}</Text>
+          <RNTextInput
+            style={styles.input}
             placeholder={t('confirmPasswordPlaceholder')}
+            placeholderTextColor="#6A6FA8"
             value={confirmPassword}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              if (confirmPasswordError) setConfirmPasswordError(null);
+            onChangeText={(v) => {
+              setConfirmPassword(v);
+              if (error) setError(null);
             }}
-            error={confirmPasswordError}
-            required
+            secureTextEntry
+            autoCapitalize="none"
+            onSubmitEditing={handleRegister}
           />
 
-          {/* Consent Checkbox */}
-          <View style={styles.consentRow}>
-            <Pressable
-              onPress={() => {
-                setAgreedToTerms(!agreedToTerms);
-                if (consentError) setConsentError(null);
-              }}
-              hitSlop={6}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: agreedToTerms }}
+          <Pressable
+            onPress={() => {
+              setAgreedToTerms((prev) => !prev);
+              if (error) setError(null);
+            }}
+            style={styles.consentRow}
+          >
+            <View
               style={[
                 styles.checkbox,
-                { borderColor: colors.border, backgroundColor: colors.surface },
-                agreedToTerms && { backgroundColor: colors.primary, borderColor: colors.primary },
+                agreedToTerms && { backgroundColor: '#14173A', borderColor: '#14173A' },
               ]}
             >
               {agreedToTerms && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
-            </Pressable>
-
-            <View style={styles.consentTextContainer}>
-              <Text style={[Typography.caption, styles.consentText, { color: colors.textSecondary }]}>
-                {language === 'tr' ? (
-                  <>
-                    <Text
-                      onPress={() => showDocumentInfo(t('termsOfService'))}
-                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
-                    >
-                      {t('termsOfService')}
-                    </Text>{' '}
-                    {t('and')}{' '}
-                    <Text
-                      onPress={() => showDocumentInfo(t('privacyPolicy'))}
-                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
-                    >
-                      {t('privacyPolicy')}
-                    </Text>
-                    'nı kabul ediyorum.
-                  </>
-                ) : (
-                  <>
-                    {t('termsConsentPrefix')}{' '}
-                    <Text
-                      onPress={() => showDocumentInfo(t('termsOfService'))}
-                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
-                    >
-                      {t('termsOfService')}
-                    </Text>{' '}
-                    {t('and')}{' '}
-                    <Text
-                      onPress={() => showDocumentInfo(t('privacyPolicy'))}
-                      style={[styles.consentLink, { color: colors.secondaryViolet }]}
-                    >
-                      {t('privacyPolicy')}
-                    </Text>
-                    .
-                  </>
-                )}
-              </Text>
             </View>
-          </View>
-          {consentError && (
-            <Text style={[Typography.caption, { color: colors.danger, marginTop: -Spacing.xs, marginBottom: Spacing.md }]}>
-              {consentError}
+            <Text style={styles.consentText}>
+              {language === 'tr'
+                ? 'Kullanım koşullarını kabul ediyor, aydınlatma metnini okuduğumu onaylıyorum.'
+                : 'I accept the Terms of Service and Privacy Policy.'}
             </Text>
-          )}
+          </Pressable>
 
-          {/* Primary Action Button */}
-          <PrimaryButton
-            label={t('createAccountButton')}
+          <View style={styles.errorSlot}>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          </View>
+
+          <Pressable
             onPress={handleRegister}
-            loading={isLoading}
             disabled={isLoading}
-            style={styles.createButton}
-          />
-        </View>
+            style={({ pressed }) => [
+              styles.primaryPill,
+              (pressed || isLoading) && { opacity: 0.85 },
+            ]}
+          >
+            {isLoading && <ActivityIndicator size="small" color="#FFFFFF" />}
+            <Text style={styles.primaryPillText}>
+              {isLoading
+                ? language === 'tr'
+                  ? 'Hesap oluşturuluyor…'
+                  : 'Creating account…'
+                : t('createAccountButton')}
+            </Text>
+          </Pressable>
 
-        {/* Footer */}
-        <View style={styles.footerContainer}>
-          <Text style={[Typography.body, { color: colors.textSecondary }]}>
-            {t('alreadyHaveAccount')}{' '}
-          </Text>
-          <Pressable onPress={onNavigateToLogin} hitSlop={8}>
-            <Text style={[Typography.button, { color: colors.primary }]}>
-              {t('logInButton')}
+          <Pressable onPress={onNavigateToLogin} style={styles.switchBtn} hitSlop={8}>
+            <Text style={styles.switchBtnText}>
+              {t('alreadyHaveAccount')} {t('logInButton')}
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </AuthShell>
+
+      <PortalTransition
+        visible={showPortal}
+        isNewUser={true}
+        onComplete={() => {
+          setShowPortal(false);
+          onRegisterSuccess(fullName.trim(), email.trim());
+        }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  keyboardContainer: {
+  root: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.screenPadding,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xxxl,
-    justifyContent: 'center',
-    width: '100%',
-    maxWidth: 440,
-    alignSelf: 'center',
+  formStack: {
+    gap: 8,
   },
-  glowCircle: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
+  heading: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#14173A',
+    marginBottom: 4,
+    letterSpacing: -0.5,
   },
-  topControlRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#14173A',
+    marginTop: 2,
   },
-  pillButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
+  input: {
+    height: 50,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#6A6FA8',
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    color: '#14173A',
+    fontSize: 16,
+    fontWeight: '500',
   },
-  brandContainer: {
-    marginBottom: Spacing.md,
+  strengthTrack: {
+    height: 8,
+    borderRadius: 99,
+    backgroundColor: '#C3C7EC',
+    overflow: 'hidden',
+    marginTop: 2,
   },
-  titleContainer: {
-    marginBottom: Spacing.xl,
+  strengthFill: {
+    height: '100%',
+    borderRadius: 99,
   },
-  pageTitle: {
-    marginBottom: Spacing.xs,
-  },
-  formContainer: {
-    width: '100%',
+  strengthText: {
+    fontSize: 13,
+    color: '#3E426E',
   },
   consentRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.md,
-    gap: Spacing.md,
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 4,
+    minHeight: 40,
   },
   checkbox: {
     width: 22,
     height: 22,
     borderRadius: 6,
-    borderWidth: 1.5,
+    borderWidth: 2,
+    borderColor: '#6A6FA8',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
-  },
-  consentTextContainer: {
-    flex: 1,
   },
   consentText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#14173A',
     lineHeight: 18,
   },
-  consentLink: {
-    textDecorationLine: 'underline',
-  },
-  createButton: {
-    marginTop: Spacing.sm,
-  },
-  footerContainer: {
-    flexDirection: 'row',
+  errorSlot: {
+    minHeight: 20,
     justifyContent: 'center',
+  },
+  errorText: {
+    color: '#A3123A',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  primaryPill: {
+    height: 54,
+    borderRadius: 99,
+    backgroundColor: '#14173A',
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing.xl,
+    justifyContent: 'center',
+    gap: 10,
+  },
+  primaryPillText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  switchBtn: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  switchBtnText: {
+    color: '#26307A',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

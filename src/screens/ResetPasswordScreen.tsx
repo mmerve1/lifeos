@@ -1,320 +1,307 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
+  TextInput as RNTextInput,
   StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
+  ActivityIndicator,
+  Animated,
+  Platform,
 } from 'react-native';
-import { KeyRound, ArrowLeft, CheckCircle } from 'lucide-react-native';
-import { useTheme } from '../theme/ThemeContext';
+import { Check } from 'lucide-react-native';
 import { useI18n } from '../i18n';
-import { Typography } from '../theme/typography';
-import { Spacing, Radius } from '../theme/spacing';
-import { LifeOSLogo } from '../components/common/LifeOSLogo';
-import { PasswordInput } from '../components/common/PasswordInput';
-import { PrimaryButton } from '../components/common/PrimaryButton';
-import { InlineFeedback } from '../components/common/InlineFeedback';
-import { createResetPasswordSchema } from '../validation/authSchemas';
+import { AuthShell } from '../components/auth/AuthShell';
 
 interface ResetPasswordScreenProps {
   email: string;
   onNavigateToLogin: () => void;
 }
 
-type StrengthLevel = 'weak' | 'fair' | 'strong';
-
-function getPasswordStrength(password: string): StrengthLevel {
-  if (password.length === 0) return 'weak';
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 1) return 'weak';
-  if (score <= 2) return 'fair';
-  return 'strong';
-}
-
 export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   email,
   onNavigateToLogin,
 }) => {
-  const { colors, isDark } = useTheme();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
+  const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [newPasswordError, setNewPasswordError] = useState<string | null>(null);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [shakeCount, setShakeCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const strength = useMemo(() => getPasswordStrength(newPassword), [newPassword]);
+  const popScale = useRef(new Animated.Value(0)).current;
 
-  const strengthColor = useMemo(() => {
-    if (strength === 'weak') return colors.danger;
-    if (strength === 'fair') return '#F59E0B';
-    return '#10B981';
-  }, [strength, colors]);
+  useEffect(() => {
+    if (!isSuccess) return;
+    popScale.setValue(0);
+    Animated.spring(popScale, {
+      toValue: 1,
+      friction: 5,
+      tension: 95,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
+  }, [isSuccess, popScale]);
 
-  const strengthLabel = useMemo(() => {
-    if (strength === 'weak') return t('passwordStrengthWeak');
-    if (strength === 'fair') return t('passwordStrengthFair');
-    return t('passwordStrengthStrong');
-  }, [strength, t]);
+  const strengthScore = useMemo(() => {
+    if (!newPassword) return 0;
+    return [
+      newPassword.length >= 8,
+      /\d/.test(newPassword),
+      /[^A-Za-z0-9]/.test(newPassword) ||
+        (/[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword)),
+    ].filter(Boolean).length;
+  }, [newPassword]);
 
-  const validate = () => {
-    setNewPasswordError(null);
-    setConfirmError(null);
-    const schema = createResetPasswordSchema(t);
-    const result = schema.safeParse({ newPassword, confirmNewPassword });
-    if (!result.success) {
-      result.error.issues.forEach((issue) => {
-        const field = issue.path[0];
-        if (field === 'newPassword' && !newPasswordError) setNewPasswordError(issue.message);
-        else if (field === 'confirmNewPassword' && !confirmError) setConfirmError(issue.message);
-      });
-      return false;
-    }
-    return true;
-  };
+  const strengthColor = ['#A3123A', '#A3123A', '#B86E00', '#14773F'][strengthScore];
+  const strengthWidth: `${number}%` = newPassword
+    ? `${Math.max(strengthScore, 1) * 33.3}%`
+    : '0%';
 
   const handleReset = () => {
-    if (!validate()) return;
+    if (isLoading) return;
+    setError(null);
+
+    if (!/^\d{6}$/.test(code.trim())) {
+      setError(
+        language === 'tr'
+          ? '6 haneli doğrulama kodunu yaz.'
+          : 'Please enter the 6-digit verification code.'
+      );
+      setShakeCount((c) => c + 1);
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError(t('newPasswordMinLength'));
+      setShakeCount((c) => c + 1);
+      return;
+    }
+
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
       setIsSuccess(true);
-    }, 900);
+    }, 650);
   };
 
   if (isSuccess) {
     return (
-      <View style={[styles.successContainer, { backgroundColor: colors.background }]}>
-        <View
-          style={[
-            styles.glowCircle,
-            { backgroundColor: isDark ? 'rgba(139, 124, 246, 0.08)' : 'rgba(124, 58, 237, 0.05)' },
-          ]}
-          pointerEvents="none"
-        />
-        <View style={styles.successInner}>
-          <View
-            style={[
-              styles.successIconWrap,
-              { backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.08)' },
-            ]}
+      <AuthShell>
+        <View style={styles.doneStack}>
+          <Animated.View style={[styles.doneCircle, { transform: [{ scale: popScale }] }]}>
+            <Check size={44} color="#FFFFFF" strokeWidth={3} />
+          </Animated.View>
+
+          <Text style={styles.doneTitle}>
+            {language === 'tr' ? 'Parolan yenilendi' : 'Password updated'}
+          </Text>
+          <Text style={styles.doneSubtitle}>{t('resetPasswordSuccessDesc')}</Text>
+
+          <Pressable
+            onPress={onNavigateToLogin}
+            style={({ pressed }) => [styles.primaryPill, { width: '100%' }, pressed && { opacity: 0.85 }]}
           >
-            <CheckCircle size={40} color="#10B981" />
-          </View>
-          <Text style={[Typography.h2, { color: colors.textPrimary, textAlign: 'center', marginBottom: Spacing.sm }]}>
-            {t('resetPasswordSuccess')}
-          </Text>
-          <Text style={[Typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: Spacing.xxxl }]}>
-            {t('resetPasswordSuccessDesc')}
-          </Text>
-          <PrimaryButton label={t('logInButton')} onPress={onNavigateToLogin} />
+            <Text style={styles.primaryPillText}>{t('logInButton')}</Text>
+          </Pressable>
         </View>
-      </View>
+      </AuthShell>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.keyboardContainer, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Glow */}
-        <View
-          style={[
-            styles.glowCircle,
-            { backgroundColor: isDark ? 'rgba(139, 124, 246, 0.08)' : 'rgba(124, 58, 237, 0.05)' },
-          ]}
-          pointerEvents="none"
+    <AuthShell shakeTrigger={shakeCount}>
+      <View style={styles.formStack}>
+        <Text style={styles.heading}>{t('resetPasswordTitle')}</Text>
+        <Text style={styles.subtitle}>
+          {language === 'tr'
+            ? `${email || 'E-posta adresin'} kayıtlıysa 6 haneli bir kod gönderildi.`
+            : `If ${email || 'your email'} is registered, a 6-digit code was sent.`}
+        </Text>
+
+        <Text style={styles.label}>
+          {language === 'tr' ? 'Doğrulama kodu' : 'Verification code'}
+        </Text>
+        <RNTextInput
+          style={styles.codeInput}
+          placeholder="000000"
+          placeholderTextColor="#9CA1CF"
+          value={code}
+          onChangeText={(v) => {
+            setCode(v.replace(/[^0-9]/g, '').slice(0, 6));
+            if (error) setError(null);
+          }}
+          keyboardType="number-pad"
+          maxLength={6}
         />
 
-        {/* Back button */}
-        <Pressable onPress={onNavigateToLogin} style={styles.backButton} hitSlop={8}>
-          <ArrowLeft size={20} color={colors.textSecondary} />
-        </Pressable>
+        <Text style={styles.label}>
+          {t('newPasswordLabel')} ({t('passwordRuleHint')})
+        </Text>
+        <RNTextInput
+          style={styles.input}
+          placeholder={t('newPasswordPlaceholder')}
+          placeholderTextColor="#6A6FA8"
+          value={newPassword}
+          onChangeText={(v) => {
+            setNewPassword(v);
+            if (error) setError(null);
+          }}
+          secureTextEntry
+          autoCapitalize="none"
+          onSubmitEditing={handleReset}
+        />
 
-        {/* Logo */}
-        <View style={styles.brandContainer}>
-          <LifeOSLogo size="sm" />
-        </View>
-
-        {/* Header */}
-        <View style={styles.headerContainer}>
+        <View style={styles.strengthTrack}>
           <View
             style={[
-              styles.iconWrap,
-              { backgroundColor: isDark ? 'rgba(139,124,246,0.15)' : 'rgba(124,58,237,0.08)' },
+              styles.strengthFill,
+              { width: strengthWidth, backgroundColor: strengthColor },
             ]}
-          >
-            <KeyRound size={28} color={colors.primary} />
-          </View>
-          <Text style={[Typography.h2, { color: colors.textPrimary, marginBottom: Spacing.xs }]}>
-            {t('resetPasswordTitle')}
-          </Text>
-          <Text style={[Typography.body, { color: colors.textSecondary, marginBottom: Spacing.xs }]}>
-            {t('resetPasswordSubtitle')}
-          </Text>
-          <Text style={[Typography.captionBold, { color: colors.primary }]}>
-            {email}
-          </Text>
+          />
         </View>
 
-        {/* Form */}
-        <View style={styles.formContainer}>
-          <PasswordInput
-            label={t('newPasswordLabel')}
-            placeholder={t('newPasswordPlaceholder')}
-            value={newPassword}
-            onChangeText={(v) => { setNewPassword(v); setNewPasswordError(null); }}
-            error={newPasswordError ?? undefined}
-          />
-
-          {newPasswordError && <InlineFeedback type="error" message={newPasswordError} />}
-
-          {/* Password strength bar */}
-          {newPassword.length > 0 && (
-            <View style={styles.strengthContainer}>
-              <View style={styles.strengthBars}>
-                {(['weak', 'fair', 'strong'] as StrengthLevel[]).map((level, i) => {
-                  const active =
-                    (strength === 'weak' && i === 0) ||
-                    (strength === 'fair' && i <= 1) ||
-                    strength === 'strong';
-                  return (
-                    <View
-                      key={level}
-                      style={[
-                        styles.strengthBar,
-                        {
-                          backgroundColor: active ? strengthColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'),
-                        },
-                      ]}
-                    />
-                  );
-                })}
-              </View>
-              <Text style={[Typography.caption, { color: strengthColor }]}>{strengthLabel}</Text>
-            </View>
-          )}
-
-          <PasswordInput
-            label={t('confirmNewPasswordLabel')}
-            placeholder={t('confirmNewPasswordPlaceholder')}
-            value={confirmNewPassword}
-            onChangeText={(v) => { setConfirmNewPassword(v); setConfirmError(null); }}
-            error={confirmError ?? undefined}
-          />
-
-          {confirmError && <InlineFeedback type="error" message={confirmError} />}
-
-          <View style={styles.submitButton}>
-            <PrimaryButton
-              label={isLoading ? t('loading') : t('resetPasswordButton')}
-              onPress={handleReset}
-              disabled={isLoading}
-            />
-          </View>
+        <View style={styles.errorSlot}>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        <Pressable
+          onPress={handleReset}
+          disabled={isLoading}
+          style={({ pressed }) => [
+            styles.primaryPill,
+            (pressed || isLoading) && { opacity: 0.85 },
+          ]}
+        >
+          {isLoading && <ActivityIndicator size="small" color="#FFFFFF" />}
+          <Text style={styles.primaryPillText}>
+            {isLoading
+              ? language === 'tr'
+                ? 'Kaydediliyor…'
+                : 'Saving…'
+              : t('resetPasswordButton')}
+          </Text>
+        </Pressable>
+
+        <Pressable onPress={onNavigateToLogin} style={styles.switchBtn} hitSlop={8}>
+          <Text style={styles.switchBtnText}>← {t('forgotPasswordBackToLogin')}</Text>
+        </Pressable>
+      </View>
+    </AuthShell>
   );
 };
 
 const styles = StyleSheet.create({
-  keyboardContainer: {
-    flex: 1,
+  formStack: {
+    gap: 10,
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.screenPadding,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xxxl,
+  heading: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#14173A',
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#3E426E',
+    lineHeight: 20,
+    marginBottom: 6,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#14173A',
+  },
+  codeInput: {
+    height: 60,
+    borderWidth: 2,
+    borderColor: '#6A6FA8',
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    color: '#14173A',
+    fontSize: 26,
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: 10,
+  },
+  input: {
+    height: 52,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#6A6FA8',
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    color: '#14173A',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  strengthTrack: {
+    height: 8,
+    borderRadius: 99,
+    backgroundColor: '#C3C7EC',
+    overflow: 'hidden',
+  },
+  strengthFill: {
+    height: '100%',
+    borderRadius: 99,
+  },
+  errorSlot: {
+    minHeight: 20,
     justifyContent: 'center',
-    width: '100%',
-    maxWidth: 440,
-    alignSelf: 'center',
   },
-  glowCircle: {
-    position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+  errorText: {
+    color: '#A3123A',
+    fontSize: 14,
+    fontWeight: '600',
   },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: Spacing.lg,
-    padding: Spacing.xs,
-  },
-  brandContainer: {
-    marginBottom: Spacing.xl,
-  },
-  headerContainer: {
-    marginBottom: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  iconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: Radius.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  formContainer: {
-    width: '100%',
-  },
-  strengthContainer: {
+  primaryPill: {
+    height: 54,
+    borderRadius: 99,
+    backgroundColor: '#14173A',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginTop: -Spacing.sm,
-    marginBottom: Spacing.md,
+    justifyContent: 'center',
+    gap: 10,
   },
-  strengthBars: {
-    flexDirection: 'row',
-    gap: 4,
-    flex: 1,
+  primaryPillText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
-  strengthBar: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-  },
-  submitButton: {
-    marginTop: Spacing.lg,
-  },
-  // Success state
-  successContainer: {
-    flex: 1,
+  switchBtn: {
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  successInner: {
-    width: '100%',
-    paddingHorizontal: Spacing.screenPadding,
-    alignItems: 'center',
+  switchBtnText: {
+    color: '#26307A',
+    fontSize: 15,
+    fontWeight: '600',
   },
-  successIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: Radius.modal,
+  doneStack: {
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 20,
+  },
+  doneCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#14173A',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xl,
+  },
+  doneTitle: {
+    fontSize: 30,
+    fontWeight: '700',
+    color: '#14173A',
+    textAlign: 'center',
+  },
+  doneSubtitle: {
+    fontSize: 15,
+    color: '#3E426E',
+    textAlign: 'center',
+    marginBottom: 8,
   },
 });
