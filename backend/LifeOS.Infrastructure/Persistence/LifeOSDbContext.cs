@@ -14,6 +14,9 @@ public class LifeOSDbContext : IdentityDbContext<ApplicationUser, IdentityRole<G
     }
 
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<HabitItem> Habits => Set<HabitItem>();
+    public DbSet<HabitLog> HabitLogs => Set<HabitLog>();
+    public DbSet<GoalItem> Goals => Set<GoalItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -44,6 +47,51 @@ public class LifeOSDbContext : IdentityDbContext<ApplicationUser, IdentityRole<G
             entity.HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<HabitItem>(entity =>
+        {
+            entity.ToTable("habits");
+            entity.HasKey(h => h.Id);
+
+            entity.Property(h => h.Title).HasMaxLength(200).IsRequired();
+            entity.Property(h => h.Category).HasConversion<string>().HasMaxLength(30);
+            entity.HasIndex(h => h.UserId);
+
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<HabitLog>(entity =>
+        {
+            entity.ToTable("habit_logs");
+            entity.HasKey(l => l.Id);
+
+            entity.HasIndex(l => new { l.HabitId, l.CompletedDate }).IsUnique();
+
+            entity.HasOne(l => l.Habit)
+                .WithMany(h => h.Logs)
+                .HasForeignKey(l => l.HabitId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<GoalItem>(entity =>
+        {
+            entity.ToTable("goals");
+            entity.HasKey(g => g.Id);
+
+            entity.Property(g => g.Title).HasMaxLength(200).IsRequired();
+            entity.Property(g => g.Description).HasMaxLength(2000);
+            entity.Property(g => g.Category).HasConversion<string>().HasMaxLength(30);
+            entity.Property(g => g.Period).HasConversion<string>().HasMaxLength(20);
+            entity.HasIndex(g => g.UserId);
+
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(g => g.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

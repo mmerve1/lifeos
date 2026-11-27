@@ -1,6 +1,8 @@
 using LifeOS.Application.Auth.Interfaces;
+using LifeOS.Application.Habits.Interfaces;
 using LifeOS.Application.Tasks.Interfaces;
 using LifeOS.Infrastructure.Auth;
+using LifeOS.Infrastructure.Habits;
 using LifeOS.Infrastructure.Identity;
 using LifeOS.Infrastructure.Persistence;
 using LifeOS.Infrastructure.Tasks;
@@ -40,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordResetCodeStore, InMemoryPasswordResetCodeStore>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITaskService, TaskService>();
+        services.AddScoped<IHabitGoalService, HabitGoalService>();
 
         return services;
     }
