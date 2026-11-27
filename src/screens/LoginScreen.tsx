@@ -246,6 +246,9 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.xxxl,
     justifyContent: 'center',
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
   },
   glowCircle: {
     position: 'absolute',

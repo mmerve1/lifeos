@@ -28,6 +28,8 @@ import {
 } from '../data/mockData';
 import { NavTabType, AgendaItemType, StatMetricType, ModuleItemType } from '../types';
 import { useTaskStore } from '../store/useTaskStore';
+import { useResponsive } from '../hooks/useResponsive';
+import { WebSidebar } from '../components/web/WebSidebar';
 
 interface DashboardScreenProps {
   userName?: string;
@@ -43,6 +45,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const { colors, isDark, toggleTheme } = useTheme();
   const { t, language, toggleLanguage } = useI18n();
   const { tasks, loadTasks, toggleTask, createTask, getStats } = useTaskStore();
+  const { isWideScreen } = useResponsive();
 
   const [activeTab, setActiveTab] = useState<NavTabType>('home');
   const [showEmptyAgenda, setShowEmptyAgenda] = useState(false);
@@ -205,19 +208,38 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Top App Bar with Theme Toggle */}
-        <AppTopBar
-          user={{ ...mockUser, name: userName }}
-          notificationCount={2}
-          onNotificationPress={handleNotificationPress}
-          onAvatarPress={() => setProfileModalVisible(true)}
+    <View style={[styles.root, isWideScreen && styles.rootWide, { backgroundColor: colors.background }]}>
+      {/* Desktop/Tablet Web Sidebar */}
+      {isWideScreen && (
+        <WebSidebar
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            if (tab === 'tasks' && onNavigateToTasks) {
+              onNavigateToTasks();
+              return;
+            }
+            setActiveTab(tab);
+          }}
+          onLogout={onLogout}
+          userName={userName}
         />
+      )}
+
+      <View style={styles.mainContentArea}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[styles.scrollContent, isWideScreen && styles.scrollContentWide]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top App Bar with Theme Toggle (Mobilde görünür, masaüstünde sidebar var) */}
+          {!isWideScreen && (
+            <AppTopBar
+              user={{ ...mockUser, name: userName }}
+              notificationCount={2}
+              onNotificationPress={handleNotificationPress}
+              onAvatarPress={() => setProfileModalVisible(true)}
+            />
+          )}
 
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>
@@ -334,17 +356,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </Text>
         </View>
 
-        {localizedModules.map((module) => (
-          <ModuleCard
-            key={module.id}
-            module={module}
-            onPress={handleModulePress}
-          />
-        ))}
+        <View style={isWideScreen ? styles.modulesGridWide : undefined}>
+          {localizedModules.map((module) => (
+            <View key={module.id} style={isWideScreen ? styles.moduleGridItemWide : undefined}>
+              <ModuleCard
+                module={module}
+                onPress={handleModulePress}
+              />
+            </View>
+          ))}
+        </View>
 
         {/* Bottom padding so content is not obscured */}
         <View style={{ height: Spacing.xxl }} />
       </ScrollView>
+    </View>
 
       {/* Profile & Settings Modal */}
       <Modal
@@ -488,25 +514,27 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
       </Modal>
 
-      {/* Fixed Bottom Navigation (5 items) */}
-      <BottomNavigation
-        activeTab={activeTab}
-        onTabChange={(tab) => {
-          if (tab === 'tasks' && onNavigateToTasks) {
-            onNavigateToTasks();
-            return;
-          }
-          setActiveTab(tab);
-          if (tab !== 'home') {
-            Alert.alert(
-              tab.charAt(0).toUpperCase() + tab.slice(1),
-              language === 'tr'
-                ? `${t(('nav' + tab.charAt(0).toUpperCase() + tab.slice(1)) as any)} görünümüne geçiliyor. MVP sürümünde Ana Sayfa ana merkezdir.`
-                : `Navigating to the ${tab} view. In this MVP release, Main Dashboard is the primary interactive hub.`
-            );
-          }
-        }}
-      />
+      {/* Fixed Bottom Navigation (Only on mobile/small screen) */}
+      {!isWideScreen && (
+        <BottomNavigation
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            if (tab === 'tasks' && onNavigateToTasks) {
+              onNavigateToTasks();
+              return;
+            }
+            setActiveTab(tab);
+            if (tab !== 'home') {
+              Alert.alert(
+                tab.charAt(0).toUpperCase() + tab.slice(1),
+                language === 'tr'
+                  ? `${t(('nav' + tab.charAt(0).toUpperCase() + tab.slice(1)) as any)} görünümüne geçiliyor. MVP sürümünde Ana Sayfa ana merkezdir.`
+                  : `Navigating to the ${tab} view. In this MVP release, Main Dashboard is the primary interactive hub.`
+              );
+            }
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -515,12 +543,34 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
+  rootWide: {
+    flexDirection: 'row',
+  },
+  mainContentArea: {
+    flex: 1,
+    height: '100%',
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: Spacing.screenPadding,
     paddingTop: Spacing.xl,
+  },
+  scrollContentWide: {
+    paddingHorizontal: Spacing.xxxl,
+    paddingTop: Spacing.xxl,
+    maxWidth: 1080,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  modulesGridWide: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  moduleGridItemWide: {
+    width: '49%',
   },
   welcomeSection: {
     marginBottom: Spacing.lg,

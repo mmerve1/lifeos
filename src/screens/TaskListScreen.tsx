@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Trash2,
   PauseCircle,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { useI18n } from '../i18n';
@@ -23,10 +24,15 @@ import { Spacing, Radius } from '../theme/spacing';
 import { useTaskStore } from '../store/useTaskStore';
 import { Task, TaskStatus, TaskPriority } from '../types/task';
 import { ModuleCategory } from '../types';
+import { useResponsive } from '../hooks/useResponsive';
+import { WebSidebar } from '../components/web/WebSidebar';
 
 interface TaskListScreenProps {
   onNavigateToCreate: () => void;
   onNavigateToEdit: (taskId: string) => void;
+  onNavigateToHome?: () => void;
+  onLogout?: () => void;
+  userName?: string;
 }
 
 type FilterTab = 'all' | TaskStatus;
@@ -47,10 +53,14 @@ const CATEGORY_ICONS: Record<ModuleCategory, string> = {
 export const TaskListScreen: React.FC<TaskListScreenProps> = ({
   onNavigateToCreate,
   onNavigateToEdit,
+  onNavigateToHome,
+  onLogout,
+  userName,
 }) => {
   const { colors, isDark } = useTheme();
   const { t } = useI18n();
   const { tasks, loadTasks, toggleTask, deleteTask } = useTaskStore();
+  const { isWideScreen } = useResponsive();
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
 
   useEffect(() => {
@@ -214,16 +224,36 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <View>
-          <Text style={[Typography.h2, { color: colors.textPrimary }]}>{t('tasksScreenTitle')}</Text>
-          {stats.total > 0 && (
-            <Text style={[Typography.caption, { color: colors.textSecondary }]}>
-              {stats.completed}/{stats.total} {t('tasksDoneRatio')}
-            </Text>
+    <View style={[styles.root, isWideScreen && styles.rootWide, { backgroundColor: colors.background }]}>
+      {isWideScreen && (
+        <WebSidebar
+          activeTab="tasks"
+          onTabChange={(tab) => {
+            if (tab === 'home' && onNavigateToHome) {
+              onNavigateToHome();
+            }
+          }}
+          onLogout={onLogout}
+          userName={userName}
+        />
+      )}
+      <View style={[styles.innerContainer, isWideScreen && styles.innerContainerWide]}>
+        {/* Header */}
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <View style={styles.headerLeft}>
+          {!isWideScreen && onNavigateToHome && (
+            <Pressable onPress={onNavigateToHome} hitSlop={8} style={styles.backBtn}>
+              <ArrowLeft size={20} color={colors.textPrimary} />
+            </Pressable>
           )}
+          <View>
+            <Text style={[Typography.h2, { color: colors.textPrimary }]}>{t('tasksScreenTitle')}</Text>
+            {stats.total > 0 && (
+              <Text style={[Typography.caption, { color: colors.textSecondary }]}>
+                {stats.completed}/{stats.total} {t('tasksDoneRatio')}
+              </Text>
+            )}
+          </View>
         </View>
 
         <Pressable
@@ -282,6 +312,7 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({
         }
         showsVerticalScrollIndicator={false}
       />
+      </View>
     </View>
   );
 };
@@ -289,6 +320,18 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  rootWide: {
+    flexDirection: 'row',
+  },
+  innerContainer: {
+    flex: 1,
+    width: '100%',
+  },
+  innerContainerWide: {
+    maxWidth: 1080,
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.xl,
   },
   header: {
     flexDirection: 'row',
@@ -298,6 +341,14 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  backBtn: {
+    padding: 4,
   },
   fabInline: {
     width: 42,

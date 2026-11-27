@@ -281,6 +281,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.screenPadding,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.xxxl,
+    width: '100%',
+    maxWidth: 640,
+    alignSelf: 'center',
   },
   selector: {
     flexDirection: 'row',
