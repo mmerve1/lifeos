@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { UserProfileType } from '../types';
 import { authApi } from '../api/authApi';
-import { tokenStorage } from '../api/client';
+import { setUnauthorizedHandler, tokenStorage } from '../api/client';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -84,3 +84,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }));
   },
 }));
+
+setUnauthorizedHandler(() => {
+  useAuthStore.setState({ isAuthenticated: false, user: null });
+});

@@ -70,6 +70,12 @@ async function tryRefreshTokens(): Promise<string | null> {
   return null;
 }
 
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: () => void) {
+  unauthorizedHandler = handler;
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit & { auth?: boolean } = {}
@@ -108,6 +114,9 @@ export async function apiRequest<T>(
         ...rest,
         headers: await makeHeaders(newToken),
       });
+    } else {
+      unauthorizedHandler?.();
+      throw new Error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
     }
   }
 

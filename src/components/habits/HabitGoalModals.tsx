@@ -39,19 +39,30 @@ export const NewHabitModal: React.FC<NewHabitModalProps> = ({
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<ModuleCategory>('health');
   const [targetPerWeek, setTargetPerWeek] = useState(5);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
       setTitle('');
       setCategory('health');
       setTargetPerWeek(5);
+      setError(null);
     }
   }, [visible]);
 
   const handleSave = async () => {
-    if (!title.trim()) return;
-    await onSave({ title: title.trim(), category, targetPerWeek });
-    onClose();
+    if (!title.trim() || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave({ title: title.trim(), category, targetPerWeek });
+      setSaving(false);
+      onClose();
+    } catch (err) {
+      setSaving(false);
+      setError(err instanceof Error ? err.message : 'Kaydedilemedi.');
+    }
   };
 
   return (
@@ -137,9 +148,12 @@ export const NewHabitModal: React.FC<NewHabitModalProps> = ({
             ))}
           </View>
 
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
           <Pressable
             onPress={handleSave}
-            style={[styles.saveBtn, { backgroundColor: colors.primary }]}
+            disabled={saving}
+            style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: saving ? 0.7 : 1 }]}
           >
             <Text style={[styles.saveBtnText, { color: colors.primaryText }]}>
               {language === 'tr' ? 'Alışkanlığı Kaydet' : 'Save Habit'}
@@ -169,6 +183,8 @@ export const NewGoalModal: React.FC<NewGoalModalProps> = ({
   const [category, setCategory] = useState<ModuleCategory>('career');
   const [period, setPeriod] = useState<GoalPeriod>('weekly');
   const [targetCount, setTargetCount] = useState('5');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -177,19 +193,28 @@ export const NewGoalModal: React.FC<NewGoalModalProps> = ({
       setCategory('career');
       setPeriod('weekly');
       setTargetCount('5');
+      setError(null);
     }
   }, [visible]);
 
   const handleSave = async () => {
-    if (!title.trim()) return;
-    await onSave({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      category,
-      period,
-      targetCount: Math.max(1, parseInt(targetCount, 10) || 1),
-    });
-    onClose();
+    if (!title.trim() || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        category,
+        period,
+        targetCount: Math.max(1, parseInt(targetCount, 10) || 1),
+      });
+      setSaving(false);
+      onClose();
+    } catch (err) {
+      setSaving(false);
+      setError(err instanceof Error ? err.message : 'Kaydedilemedi.');
+    }
   };
 
   return (
@@ -305,9 +330,12 @@ export const NewGoalModal: React.FC<NewGoalModalProps> = ({
             })}
           </View>
 
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
           <Pressable
             onPress={handleSave}
-            style={[styles.saveBtn, { backgroundColor: colors.primary }]}
+            disabled={saving}
+            style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: saving ? 0.7 : 1 }]}
           >
             <Text style={[styles.saveBtnText, { color: colors.primaryText }]}>
               {language === 'tr' ? 'Hedefi Kaydet' : 'Save Goal'}
@@ -400,5 +428,10 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  errorText: {
+    color: '#FF8FA3',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
