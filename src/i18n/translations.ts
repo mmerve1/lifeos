@@ -149,6 +149,19 @@ export const translations = {
     taskMarkActive: 'Mark as active',
     taskMarkDeferred: 'Defer',
 
+    // Calendar
+    calendarToday: 'Today',
+    calendarMonth: 'Month',
+    calendarWeek: 'Week',
+    calendarDay: 'Day',
+    calendarUpcoming: 'Upcoming today',
+    calendarBreakdown: 'Category breakdown',
+    calendarAddEvent: 'Add task',
+    calendarNoTasksDay: 'No tasks scheduled for this day',
+    calendarAllDay: 'Anytime',
+    calendarRescheduleTomorrow: 'Move to tomorrow',
+    calendarEdit: 'Edit',
+
     // Modals & Settings
     settingsTitle: 'Settings & Profile',
     platformVersion: 'Platform Version',
@@ -322,6 +335,19 @@ export const translations = {
     taskMarkComplete: 'Tamamlandı olarak işaretle',
     taskMarkActive: 'Aktif olarak işaretle',
     taskMarkDeferred: 'Ertele',
+
+    // Calendar
+    calendarToday: 'Bugün',
+    calendarMonth: 'Ay',
+    calendarWeek: 'Hafta',
+    calendarDay: 'Gün',
+    calendarUpcoming: 'Bugün yaklaşanlar',
+    calendarBreakdown: 'Alan dağılımı',
+    calendarAddEvent: 'Görev ekle',
+    calendarNoTasksDay: 'Bu gün için planlanmış görev yok',
+    calendarAllDay: 'Tüm gün',
+    calendarRescheduleTomorrow: 'Yarına ertele',
+    calendarEdit: 'Düzenle',
 
     // Modals & Settings
     settingsTitle: 'Ayarlar ve Profil',

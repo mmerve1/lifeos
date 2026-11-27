@@ -36,6 +36,7 @@ interface DashboardScreenProps {
   onLogout: () => void;
   onNavigateToTasks?: () => void;
   onNavigateToNewTask?: () => void;
+  onNavigateToCalendar?: () => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -43,6 +44,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onLogout,
   onNavigateToTasks,
   onNavigateToNewTask,
+  onNavigateToCalendar,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
   const { t, language, toggleLanguage } = useI18n();
@@ -241,6 +243,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           onTabChange={(tab) => {
             if (tab === 'tasks' && onNavigateToTasks) {
               onNavigateToTasks();
+              return;
+            }
+            if (tab === 'calendar' && onNavigateToCalendar) {
+              onNavigateToCalendar();
               return;
             }
             if (tab === 'profile') {
@@ -463,6 +469,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             onTabChange={(tab) => {
               if (tab === 'tasks' && onNavigateToTasks) {
                 onNavigateToTasks();
+                return;
+              }
+              if (tab === 'calendar' && onNavigateToCalendar) {
+                onNavigateToCalendar();
                 return;
               }
               if (tab === 'profile') {

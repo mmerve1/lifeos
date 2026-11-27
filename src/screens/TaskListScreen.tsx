@@ -31,6 +31,7 @@ interface TaskListScreenProps {
   onNavigateToCreate: () => void;
   onNavigateToEdit: (taskId: string) => void;
   onNavigateToHome?: () => void;
+  onNavigateToCalendar?: () => void;
   onLogout?: () => void;
   userName?: string;
 }
@@ -54,6 +55,7 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({
   onNavigateToCreate,
   onNavigateToEdit,
   onNavigateToHome,
+  onNavigateToCalendar,
   onLogout,
   userName,
 }) => {
@@ -231,6 +233,8 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({
           onTabChange={(tab) => {
             if (tab === 'home' && onNavigateToHome) {
               onNavigateToHome();
+            } else if (tab === 'calendar' && onNavigateToCalendar) {
+              onNavigateToCalendar();
             }
           }}
           onLogout={onLogout}
