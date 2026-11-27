@@ -1,7 +1,9 @@
 using LifeOS.Application.Auth.Interfaces;
+using LifeOS.Application.Tasks.Interfaces;
 using LifeOS.Infrastructure.Auth;
 using LifeOS.Infrastructure.Identity;
 using LifeOS.Infrastructure.Persistence;
+using LifeOS.Infrastructure.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -37,6 +39,7 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IPasswordResetCodeStore, InMemoryPasswordResetCodeStore>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ITaskService, TaskService>();
 
         return services;
     }
