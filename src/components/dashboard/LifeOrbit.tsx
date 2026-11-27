@@ -199,7 +199,12 @@ export const LifeOrbit: React.FC<LifeOrbitProps> = ({
 
         {/* Center animated SVG progress ring */}
         <View style={styles.centerRingWrap} pointerEvents="none">
-          <Svg width={120} height={120} viewBox="0 0 120 120">
+          <Svg
+            width={120}
+            height={120}
+            viewBox="0 0 120 120"
+            style={{ transform: [{ rotate: '-90deg' }] }}
+          >
             <Circle
               cx={60}
               cy={60}
@@ -218,8 +223,6 @@ export const LifeOrbit: React.FC<LifeOrbitProps> = ({
               strokeLinecap="round"
               strokeDasharray={`${RING_CIRCUMFERENCE}`}
               strokeDashoffset={progressAnim}
-              rotation={-90}
-              origin="60, 60"
             />
           </Svg>
           <View style={styles.centerTextWrap}>
