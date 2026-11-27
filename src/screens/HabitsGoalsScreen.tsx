@@ -30,6 +30,7 @@ interface HabitsGoalsScreenProps {
   onNavigateToTasks: () => void;
   onNavigateToCalendar: () => void;
   onNavigateToMentor?: () => void;
+  onNavigateToProfile?: () => void;
   onLogout: () => void;
 }
 
@@ -39,6 +40,7 @@ export const HabitsGoalsScreen: React.FC<HabitsGoalsScreenProps> = ({
   onNavigateToTasks,
   onNavigateToCalendar,
   onNavigateToMentor,
+  onNavigateToProfile,
   onLogout,
 }) => {
   const { colors, isDark } = useTheme();
@@ -78,6 +80,7 @@ export const HabitsGoalsScreen: React.FC<HabitsGoalsScreenProps> = ({
             else if (tab === 'tasks') onNavigateToTasks();
             else if (tab === 'calendar') onNavigateToCalendar();
             else if (tab === 'ai' && onNavigateToMentor) onNavigateToMentor();
+            else if (tab === 'profile' && onNavigateToProfile) onNavigateToProfile();
           }}
           onLogout={onLogout}
           userName={userName}

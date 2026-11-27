@@ -34,6 +34,7 @@ interface TaskListScreenProps {
   onNavigateToCalendar?: () => void;
   onNavigateToHabits?: () => void;
   onNavigateToMentor?: () => void;
+  onNavigateToProfile?: () => void;
   onLogout?: () => void;
   userName?: string;
 }
@@ -60,6 +61,7 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({
   onNavigateToCalendar,
   onNavigateToHabits,
   onNavigateToMentor,
+  onNavigateToProfile,
   onLogout,
   userName,
 }) => {
@@ -243,6 +245,8 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({
               onNavigateToHabits();
             } else if (tab === 'ai' && onNavigateToMentor) {
               onNavigateToMentor();
+            } else if (tab === 'profile' && onNavigateToProfile) {
+              onNavigateToProfile();
             }
           }}
           onLogout={onLogout}

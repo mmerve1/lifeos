@@ -21,6 +21,7 @@ export default function DashboardRoute() {
       onNavigateToCalendar={() => router.push('/(app)/calendar')}
       onNavigateToHabits={() => router.push('/(app)/habits')}
       onNavigateToMentor={() => router.push('/(app)/mentor')}
+      onNavigateToProfile={() => router.push('/(app)/profile')}
       onNavigateToOnboarding={() => router.push('/(app)/onboarding')}
     />
   );

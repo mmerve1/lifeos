@@ -15,6 +15,7 @@ export default function MentorRoute() {
       onNavigateToTasks={() => router.replace('/(app)/tasks')}
       onNavigateToCalendar={() => router.replace('/(app)/calendar')}
       onNavigateToHabits={() => router.replace('/(app)/habits')}
+      onNavigateToProfile={() => router.replace('/(app)/profile')}
       onLogout={async () => {
         clearTasks();
         await logout();

@@ -40,6 +40,7 @@ interface DashboardScreenProps {
   onNavigateToCalendar?: () => void;
   onNavigateToHabits?: () => void;
   onNavigateToMentor?: () => void;
+  onNavigateToProfile?: () => void;
   onNavigateToOnboarding?: () => void;
 }
 
@@ -51,6 +52,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigateToCalendar,
   onNavigateToHabits,
   onNavigateToMentor,
+  onNavigateToProfile,
   onNavigateToOnboarding,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
@@ -284,7 +286,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               return;
             }
             if (tab === 'profile') {
-              setProfileModalVisible(true);
+              if (onNavigateToProfile) onNavigateToProfile();
+              else setProfileModalVisible(true);
               return;
             }
             setActiveTab(tab);
@@ -517,7 +520,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 return;
               }
               if (tab === 'profile') {
-                setProfileModalVisible(true);
+                if (onNavigateToProfile) onNavigateToProfile();
+                else setProfileModalVisible(true);
                 return;
               }
               setActiveTab(tab);

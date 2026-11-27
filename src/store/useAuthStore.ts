@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { UserProfileType } from '../types';
 import { authApi } from '../api/authApi';
+import { profileApi } from '../api/profileApi';
 import { setUnauthorizedHandler, tokenStorage } from '../api/client';
 
 interface AuthState {
@@ -12,6 +13,7 @@ interface AuthState {
   restoreSession: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfileType>) => void;
+  updateAccountName: (fullName: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -81,6 +83,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   updateProfile: (updates) => {
     set((state) => ({
       user: state.user ? { ...state.user, ...updates } : null,
+    }));
+  },
+
+  updateAccountName: async (fullName: string) => {
+    const updated = await profileApi.updateAccount(fullName);
+    set((state) => ({
+      user: state.user
+        ? {
+            ...state.user,
+            name: updated.fullName,
+            email: updated.email,
+            initials: updated.initials,
+          }
+        : {
+            name: updated.fullName,
+            email: updated.email,
+            initials: updated.initials,
+          },
     }));
   },
 }));

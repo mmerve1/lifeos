@@ -52,6 +52,7 @@ interface AIMentorScreenProps {
   onNavigateToTasks: () => void;
   onNavigateToCalendar: () => void;
   onNavigateToHabits: () => void;
+  onNavigateToProfile?: () => void;
   onLogout: () => void;
 }
 
@@ -73,6 +74,7 @@ export const AIMentorScreen: React.FC<AIMentorScreenProps> = ({
   onNavigateToTasks,
   onNavigateToCalendar,
   onNavigateToHabits,
+  onNavigateToProfile,
   onLogout,
 }) => {
   const { colors, isDark } = useTheme();
@@ -280,6 +282,7 @@ export const AIMentorScreen: React.FC<AIMentorScreenProps> = ({
     else if (tab === 'tasks') onNavigateToTasks();
     else if (tab === 'calendar') onNavigateToCalendar();
     else if (tab === 'habits') onNavigateToHabits();
+    else if (tab === 'profile' && onNavigateToProfile) onNavigateToProfile();
   };
 
   const permissionItems: {
