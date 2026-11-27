@@ -28,6 +28,7 @@ import { SecondaryButton } from '../components/common/SecondaryButton';
 import { mockUser } from '../data/mockData';
 import { NavTabType, AgendaItemType, ModuleItemType } from '../types';
 import { useTaskStore } from '../store/useTaskStore';
+import { useLifeProfileStore } from '../store/useLifeProfileStore';
 import { useResponsive } from '../hooks/useResponsive';
 import { WebSidebar } from '../components/web/WebSidebar';
 
@@ -38,6 +39,7 @@ interface DashboardScreenProps {
   onNavigateToNewTask?: () => void;
   onNavigateToCalendar?: () => void;
   onNavigateToHabits?: () => void;
+  onNavigateToOnboarding?: () => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -47,10 +49,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigateToNewTask,
   onNavigateToCalendar,
   onNavigateToHabits,
+  onNavigateToOnboarding,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
   const { t, language, toggleLanguage } = useI18n();
   const { tasks, loadTasks, toggleTask, createTask, getStats } = useTaskStore();
+  const { profile, loadProfile } = useLifeProfileStore();
   const { isWideScreen } = useResponsive();
 
   const [activeTab, setActiveTab] = useState<NavTabType>('home');
@@ -63,7 +67,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+    loadProfile();
+  }, [loadTasks, loadProfile]);
 
   useEffect(() => {
     const useNativeDriver = Platform.OS !== 'web';
@@ -136,8 +141,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       : `${remainingCount} tasks left today.`;
   }, [language, remainingCount, taskStats.total]);
 
-  const localizedModules: ModuleItemType[] = useMemo(
-    () => [
+  const localizedModules: ModuleItemType[] = useMemo(() => {
+    const base: ModuleItemType[] = [
       {
         id: 'career',
         name: t('moduleCareer'),
@@ -197,9 +202,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         iconName: 'Sparkles',
         badge: 'Beta',
       },
-    ],
-    [language, t]
-  );
+    ];
+
+    if (!profile?.focusAreas?.length) return base;
+    const focusSet = new Set(profile.focusAreas);
+    return base
+      .map((m) =>
+        focusSet.has(m.category)
+          ? { ...m, badge: language === 'tr' ? 'Öncelikli' : 'Priority' }
+          : m
+      )
+      .sort((a, b) => (focusSet.has(b.category) ? 1 : 0) - (focusSet.has(a.category) ? 1 : 0));
+  }, [language, t, profile]);
 
   const handleModulePress = (moduleId: string) => {
     if (moduleId === 'personal' && onNavigateToTasks) {
@@ -446,7 +460,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
           {/* Animated AI Assistant Suggestion Banner */}
           <FadeRiseView delay={240}>
-            <AssistantBanner />
+            <AssistantBanner
+              profile={profile}
+              onOpenOnboarding={onNavigateToOnboarding}
+            />
           </FadeRiseView>
 
           {/* Your Spaces (Modules) Section */}
@@ -559,6 +576,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </View>
 
             <View style={styles.modalActions}>
+              {onNavigateToOnboarding && (
+                <SecondaryButton
+                  label={language === 'tr' ? 'Yaşam Profilini Güncelle' : 'Update Life Profile'}
+                  onPress={() => {
+                    setProfileModalVisible(false);
+                    onNavigateToOnboarding();
+                  }}
+                  style={{ marginBottom: Spacing.sm }}
+                />
+              )}
               <SecondaryButton
                 label={t('logout')}
                 icon={<LogOut size={16} color={colors.danger} />}

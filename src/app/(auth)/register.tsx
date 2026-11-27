@@ -8,7 +8,7 @@ export default function RegisterRoute() {
   return (
     <RegisterScreen
       onNavigateToLogin={() => router.back()}
-      onRegisterSuccess={() => router.replace('/(app)')}
+      onRegisterSuccess={() => router.replace('/(app)/onboarding')}
     />
   );
 }

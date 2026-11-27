@@ -12,12 +12,17 @@ import { Sparkles } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { useI18n } from '../../i18n';
 import { Spacing, Radius } from '../../theme/spacing';
+import { LifeProfile } from '../../types/profile';
 
 interface AssistantBannerProps {
+  profile?: LifeProfile | null;
+  onOpenOnboarding?: () => void;
   onApproveAction?: (approved: boolean) => void;
 }
 
 export const AssistantBanner: React.FC<AssistantBannerProps> = ({
+  profile,
+  onOpenOnboarding,
   onApproveAction,
 }) => {
   const { colors, isDark } = useTheme();
@@ -48,32 +53,49 @@ export const AssistantBanner: React.FC<AssistantBannerProps> = ({
     return () => loop.stop();
   }, [breatheAnim, useNativeDriver]);
 
+  const needsOnboarding = !profile?.onboardingCompleted;
+
   const handlePress = () => {
+    if (needsOnboarding && onOpenOnboarding) {
+      onOpenOnboarding();
+      return;
+    }
     const next = !approved;
     setApproved(next);
     onApproveAction?.(next);
   };
 
-  const title = approved
+  const title = needsOnboarding
     ? language === 'tr'
-      ? 'İki odak bloğu planına eklendi.'
-      : 'Two focus blocks were added to your schedule.'
-    : language === 'tr'
-      ? 'Kalan görevlerin için hafta sonuna 2 odak bloğu yerleştireyim mi?'
-      : 'Shall I schedule 2 focus blocks this weekend for remaining tasks?';
+      ? 'Seni henüz tanımıyorum — 1 dakikalık sohbetle yörüngeni sana göre kurayım mı?'
+      : "I don't know you yet — shall we take 1 minute to personalize your orbit?"
+    : approved
+      ? language === 'tr'
+        ? 'Odak bloğun planına eklendi.'
+        : 'Your focus block was added to your schedule.'
+      : language === 'tr'
+        ? `Ana hedefin için odak bloğu: “${profile.primaryGoal}”`
+        : `Focus block for your main goal: “${profile.primaryGoal}”`;
 
-  const subtitle =
-    language === 'tr'
-      ? 'Neden: haftalık hedef ilerlemeni korumak için Cumartesi ve Pazar 11.00 boş görünüyor.'
-      : 'Why: Saturday and Sunday 11:00 are open to keep your weekly goals on track.';
-
-  const buttonLabel = approved
+  const subtitle = needsOnboarding
     ? language === 'tr'
-      ? 'Geri al'
-      : 'Undo'
+      ? 'Öncelikli alanlarını ve günlük ritmini öğrenerek Dashboard’unu ve önerilerimi sana göre şekillendireyim.'
+      : 'Tell me your focus areas and daily rhythm so I can tailor your Dashboard and suggestions.'
     : language === 'tr'
-      ? 'Onayla ve ekle'
-      : 'Approve & add';
+      ? `En verimli zamanına (${profile.peakTime === 'morning' ? 'Sabah' : profile.peakTime === 'afternoon' ? 'Gündüz' : 'Akşam'}) göre önerildi.`
+      : `Suggested for your peak time (${profile.peakTime}).`;
+
+  const buttonLabel = needsOnboarding
+    ? language === 'tr'
+      ? 'Tanışmaya başla'
+      : 'Start onboarding'
+    : approved
+      ? language === 'tr'
+        ? 'Geri al'
+        : 'Undo'
+      : language === 'tr'
+        ? 'Onayla ve ekle'
+        : 'Approve & add';
 
   return (
     <View style={[styles.banner, { backgroundColor: colors.accentLight }]}>

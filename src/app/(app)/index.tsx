@@ -20,6 +20,7 @@ export default function DashboardRoute() {
       onNavigateToNewTask={() => router.push('/(app)/tasks/new')}
       onNavigateToCalendar={() => router.push('/(app)/calendar')}
       onNavigateToHabits={() => router.push('/(app)/habits')}
+      onNavigateToOnboarding={() => router.push('/(app)/onboarding')}
     />
   );
 }

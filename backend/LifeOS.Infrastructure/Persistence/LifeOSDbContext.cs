@@ -17,6 +17,7 @@ public class LifeOSDbContext : IdentityDbContext<ApplicationUser, IdentityRole<G
     public DbSet<HabitItem> Habits => Set<HabitItem>();
     public DbSet<HabitLog> HabitLogs => Set<HabitLog>();
     public DbSet<GoalItem> Goals => Set<GoalItem>();
+    public DbSet<UserLifeProfile> UserLifeProfiles => Set<UserLifeProfile>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -92,6 +93,25 @@ public class LifeOSDbContext : IdentityDbContext<ApplicationUser, IdentityRole<G
             entity.HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(g => g.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<UserLifeProfile>(entity =>
+        {
+            entity.ToTable("user_life_profiles");
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.LifeStage).HasMaxLength(120).IsRequired();
+            entity.Property(p => p.FocusAreas).HasMaxLength(300).IsRequired();
+            entity.Property(p => p.PrimaryGoal).HasMaxLength(500).IsRequired();
+            entity.Property(p => p.PeakTime).HasMaxLength(40).IsRequired();
+            entity.Property(p => p.MentorStyle).HasMaxLength(40).IsRequired();
+
+            entity.HasIndex(p => p.UserId).IsUnique();
+
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

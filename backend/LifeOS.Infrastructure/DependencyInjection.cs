@@ -1,10 +1,12 @@
 using LifeOS.Application.Auth.Interfaces;
 using LifeOS.Application.Habits.Interfaces;
+using LifeOS.Application.Profile.Interfaces;
 using LifeOS.Application.Tasks.Interfaces;
 using LifeOS.Infrastructure.Auth;
 using LifeOS.Infrastructure.Habits;
 using LifeOS.Infrastructure.Identity;
 using LifeOS.Infrastructure.Persistence;
+using LifeOS.Infrastructure.Profile;
 using LifeOS.Infrastructure.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITaskService, TaskService>();
         services.AddScoped<IHabitGoalService, HabitGoalService>();
+        services.AddScoped<ILifeProfileService, LifeProfileService>();
 
         return services;
     }
