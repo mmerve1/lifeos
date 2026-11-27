@@ -1,18 +1,20 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
 import { TaskListScreen } from '../../../screens/TaskListScreen';
-import { useAuthStore } from '../../../store';
+import { useAuthStore, useTaskStore } from '../../../store';
 
 export default function TasksRoute() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const clearTasks = useTaskStore((s) => s.clearTasks);
 
   return (
     <TaskListScreen
       userName={user?.name || 'Merve'}
       onNavigateToHome={() => router.replace('/(app)')}
-      onLogout={() => {
-        logout();
+      onLogout={async () => {
+        clearTasks();
+        await logout();
         router.replace('/(auth)/login');
       }}
       onNavigateToCreate={() => router.push('/(app)/tasks/new')}

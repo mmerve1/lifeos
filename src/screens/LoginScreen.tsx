@@ -11,6 +11,7 @@ import { useI18n } from '../i18n';
 import { AuthShell } from '../components/auth/AuthShell';
 import { PortalTransition } from '../components/auth/PortalTransition';
 import { createLoginSchema } from '../validation/authSchemas';
+import { useAuthStore } from '../store';
 
 interface LoginScreenProps {
   onNavigateToRegister: () => void;
@@ -24,6 +25,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onNavigateToForgotPassword,
 }) => {
   const { t, language } = useI18n();
+  const loginAction = useAuthStore((s) => s.login);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,7 +40,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setShakeCount((c) => c + 1);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (isLoading) return;
     setError(null);
 
@@ -51,10 +53,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await loginAction(email.trim(), password);
       setIsLoading(false);
       setShowPortal(true);
-    }, 650);
+    } catch (err) {
+      setIsLoading(false);
+      triggerError(err instanceof Error ? err.message : t('emailInvalid'));
+    }
   };
 
   return (

@@ -10,10 +10,11 @@ import {
 import { useI18n } from '../i18n';
 import { AuthShell } from '../components/auth/AuthShell';
 import { createForgotPasswordSchema } from '../validation/authSchemas';
+import { authApi } from '../api/authApi';
 
 interface ForgotPasswordScreenProps {
   onNavigateToLogin: () => void;
-  onNavigateToResetPassword: (email: string) => void;
+  onNavigateToResetPassword: (email: string, devCode?: string | null) => void;
 }
 
 export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
@@ -27,7 +28,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   const [shakeCount, setShakeCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (isLoading) return;
     setError(null);
 
@@ -40,10 +41,15 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await authApi.forgotPassword(email.trim());
       setIsLoading(false);
-      onNavigateToResetPassword(email.trim());
-    }, 650);
+      onNavigateToResetPassword(email.trim(), res.devCode);
+    } catch (err) {
+      setIsLoading(false);
+      setError(err instanceof Error ? err.message : t('emailInvalid'));
+      setShakeCount((c) => c + 1);
+    }
   };
 
   return (

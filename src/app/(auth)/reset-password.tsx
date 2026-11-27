@@ -4,11 +4,12 @@ import { ResetPasswordScreen } from '../../screens/ResetPasswordScreen';
 
 export default function ResetPasswordRoute() {
   const router = useRouter();
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { email, devCode } = useLocalSearchParams<{ email: string; devCode?: string }>();
 
   return (
     <ResetPasswordScreen
       email={email ?? ''}
+      devCode={devCode}
       onNavigateToLogin={() => router.replace('/(auth)/login')}
     />
   );

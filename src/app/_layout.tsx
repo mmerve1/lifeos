@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../theme/ThemeContext';
 import { I18nProvider } from '../i18n';
+import { useAuthStore } from '../store';
 
 function RootLayoutContent() {
   const { colors, isDark } = useTheme();
+  const restoreSession = useAuthStore((s) => s.restoreSession);
+
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>

@@ -85,19 +85,20 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({
     return true;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validate()) return;
     setIsSaving(true);
 
-    setTimeout(() => {
+    try {
+      const defaultDate = dueDate.trim() || new Date().toISOString().split('T')[0];
       if (isEdit && taskId) {
-        updateTask(taskId, {
+        await updateTask(taskId, {
           title: title.trim(),
           description: description.trim() || undefined,
           priority,
           category,
-          dueDate: dueDate || undefined,
-          dueTime: dueTime || undefined,
+          dueDate: defaultDate,
+          dueTime: dueTime.trim() || undefined,
         });
       } else {
         const input: CreateTaskInput = {
@@ -105,14 +106,17 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({
           description: description.trim() || undefined,
           priority,
           category,
-          dueDate: dueDate || undefined,
-          dueTime: dueTime || undefined,
+          dueDate: defaultDate,
+          dueTime: dueTime.trim() || undefined,
         };
-        createTask(input);
+        await createTask(input);
       }
       setIsSaving(false);
       onSaved();
-    }, 300);
+    } catch (err) {
+      setIsSaving(false);
+      setTitleError(err instanceof Error ? err.message : 'Kaydedilemedi.');
+    }
   };
 
   const selectedPriority = PRIORITIES.find((p) => p.value === priority)!;

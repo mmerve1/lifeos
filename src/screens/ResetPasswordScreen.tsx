@@ -12,14 +12,17 @@ import {
 import { Check } from 'lucide-react-native';
 import { useI18n } from '../i18n';
 import { AuthShell } from '../components/auth/AuthShell';
+import { authApi } from '../api/authApi';
 
 interface ResetPasswordScreenProps {
   email: string;
+  devCode?: string;
   onNavigateToLogin: () => void;
 }
 
 export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   email,
+  devCode,
   onNavigateToLogin,
 }) => {
   const { t, language } = useI18n();
@@ -59,7 +62,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
     ? `${Math.max(strengthScore, 1) * 33.3}%`
     : '0%';
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (isLoading) return;
     setError(null);
 
@@ -80,10 +83,15 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await authApi.resetPassword(email, code.trim(), newPassword);
       setIsLoading(false);
       setIsSuccess(true);
-    }, 650);
+    } catch (err) {
+      setIsLoading(false);
+      setError(err instanceof Error ? err.message : t('newPasswordMinLength'));
+      setShakeCount((c) => c + 1);
+    }
   };
 
   if (isSuccess) {
@@ -116,8 +124,8 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
         <Text style={styles.heading}>{t('resetPasswordTitle')}</Text>
         <Text style={styles.subtitle}>
           {language === 'tr'
-            ? `${email || 'E-posta adresin'} kayıtlıysa 6 haneli bir kod gönderildi.`
-            : `If ${email || 'your email'} is registered, a 6-digit code was sent.`}
+            ? `${email || 'E-posta adresin'} kayıtlıysa 6 haneli bir kod gönderildi.${devCode ? ` (Geliştirme kodu: ${devCode})` : ''}`
+            : `If ${email || 'your email'} is registered, a 6-digit code was sent.${devCode ? ` (Dev code: ${devCode})` : ''}`}
         </Text>
 
         <Text style={styles.label}>

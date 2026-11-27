@@ -12,6 +12,7 @@ import { useI18n } from '../i18n';
 import { AuthShell } from '../components/auth/AuthShell';
 import { PortalTransition } from '../components/auth/PortalTransition';
 import { createRegisterSchema } from '../validation/authSchemas';
+import { useAuthStore } from '../store';
 
 interface RegisterScreenProps {
   onNavigateToLogin: () => void;
@@ -23,6 +24,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onRegisterSuccess,
 }) => {
   const { t, language } = useI18n();
+  const registerAction = useAuthStore((s) => s.register);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -56,7 +58,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
         t('passwordStrengthStrong'),
       ][strengthScore];
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (isLoading) return;
     setError(null);
 
@@ -76,10 +78,15 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await registerAction(fullName.trim(), email.trim(), password);
       setIsLoading(false);
       setShowPortal(true);
-    }, 650);
+    } catch (err) {
+      setIsLoading(false);
+      setError(err instanceof Error ? err.message : t('emailInvalid'));
+      setShakeCount((c) => c + 1);
+    }
   };
 
   return (

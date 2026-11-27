@@ -8,8 +8,11 @@ export default function ForgotPasswordRoute() {
   return (
     <ForgotPasswordScreen
       onNavigateToLogin={() => router.back()}
-      onNavigateToResetPassword={(email) =>
-        router.push({ pathname: '/(auth)/reset-password', params: { email } })
+      onNavigateToResetPassword={(email, devCode) =>
+        router.push({
+          pathname: '/(auth)/reset-password',
+          params: { email, devCode: devCode ?? '' },
+        })
       }
     />
   );
