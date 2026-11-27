@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Home, Calendar, CheckSquare, Sparkles, User, LogOut, Sun, Moon, Globe } from 'lucide-react-native';
+import { Home, Calendar, CheckSquare, Flame, Sparkles, User, LogOut, Sun, Moon, Globe } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { useI18n, TranslationKey } from '../../i18n';
 import { Typography } from '../../theme/typography';
@@ -45,6 +45,11 @@ export const WebSidebar: React.FC<WebSidebarProps> = ({
       key: 'calendar',
       labelKey: 'navCalendar',
       renderIcon: (color) => <Calendar size={18} color={color} />,
+    },
+    {
+      key: 'habits',
+      labelKey: 'navHabits',
+      renderIcon: (color) => <Flame size={18} color={color} />,
     },
     {
       key: 'ai',

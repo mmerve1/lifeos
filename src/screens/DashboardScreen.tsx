@@ -37,6 +37,7 @@ interface DashboardScreenProps {
   onNavigateToTasks?: () => void;
   onNavigateToNewTask?: () => void;
   onNavigateToCalendar?: () => void;
+  onNavigateToHabits?: () => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -45,6 +46,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigateToTasks,
   onNavigateToNewTask,
   onNavigateToCalendar,
+  onNavigateToHabits,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
   const { t, language, toggleLanguage } = useI18n();
@@ -204,6 +206,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       onNavigateToTasks();
       return;
     }
+    if (moduleId === 'health' && onNavigateToHabits) {
+      onNavigateToHabits();
+      return;
+    }
     const mod = localizedModules.find((m) => m.id === moduleId);
     setActiveModuleModal(mod ? mod.name : moduleId);
   };
@@ -247,6 +253,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             }
             if (tab === 'calendar' && onNavigateToCalendar) {
               onNavigateToCalendar();
+              return;
+            }
+            if (tab === 'habits' && onNavigateToHabits) {
+              onNavigateToHabits();
               return;
             }
             if (tab === 'profile') {

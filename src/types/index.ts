@@ -1,6 +1,6 @@
 export type ScreenType = 'login' | 'register' | 'dashboard';
 
-export type NavTabType = 'home' | 'calendar' | 'tasks' | 'ai' | 'profile';
+export type NavTabType = 'home' | 'calendar' | 'tasks' | 'habits' | 'ai' | 'profile';
 
 export type ModuleCategory =
   | 'career'

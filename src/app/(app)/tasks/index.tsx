@@ -13,6 +13,7 @@ export default function TasksRoute() {
       userName={user?.name || 'Merve'}
       onNavigateToHome={() => router.replace('/(app)')}
       onNavigateToCalendar={() => router.replace('/(app)/calendar')}
+      onNavigateToHabits={() => router.replace('/(app)/habits')}
       onLogout={async () => {
         clearTasks();
         await logout();

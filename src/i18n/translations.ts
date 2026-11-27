@@ -82,6 +82,7 @@ export const translations = {
     navHome: 'Home',
     navCalendar: 'Calendar',
     navTasks: 'Tasks',
+    navHabits: 'Habits & Goals',
     navAI: 'AI',
     navProfile: 'Profile',
 
@@ -269,6 +270,7 @@ export const translations = {
     navHome: 'Ana Sayfa',
     navCalendar: 'Takvim',
     navTasks: 'Görevler',
+    navHabits: 'Alışkanlıklar',
     navAI: 'AI',
     navProfile: 'Profil',
 
