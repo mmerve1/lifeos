@@ -43,6 +43,7 @@ interface CalendarScreenProps {
   onNavigateToTasks: () => void;
   onNavigateToHabits?: () => void;
   onNavigateToMentor?: () => void;
+  onNavigateToProfile?: () => void;
   onNavigateToEditTask: (id: string) => void;
   onLogout: () => void;
 }
@@ -64,6 +65,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   onNavigateToTasks,
   onNavigateToHabits,
   onNavigateToMentor,
+  onNavigateToProfile,
   onNavigateToEditTask,
   onLogout,
 }) => {
@@ -496,6 +498,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
             else if (tab === 'tasks') onNavigateToTasks();
             else if (tab === 'habits' && onNavigateToHabits) onNavigateToHabits();
             else if (tab === 'ai' && onNavigateToMentor) onNavigateToMentor();
+            else if (tab === 'profile' && onNavigateToProfile) onNavigateToProfile();
           }}
           onLogout={onLogout}
           userName={userName}
