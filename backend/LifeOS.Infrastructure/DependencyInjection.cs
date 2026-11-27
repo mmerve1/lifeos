@@ -1,3 +1,5 @@
+using LifeOS.Application.Auth.Interfaces;
+using LifeOS.Infrastructure.Auth;
 using LifeOS.Infrastructure.Identity;
 using LifeOS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +32,11 @@ public static class DependencyInjection
             })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<LifeOSDbContext>();
+
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IPasswordResetCodeStore, InMemoryPasswordResetCodeStore>();
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }
